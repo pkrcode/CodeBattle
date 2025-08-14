@@ -120,6 +120,42 @@ const Navbar: React.FC = () => {
 
           {/* Right Side - User Dropdown Menu */}
           <div className="flex items-center space-x-4" ref={dropdownRef}>
+            {/* Mobile User Info - Only visible on mobile */}
+            <div className="md:hidden flex items-center space-x-3">
+              <div className="text-right">
+                <div className={`text-sm font-medium transition-colors duration-300 ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}>
+                  {user?.displayName}
+                </div>
+                <div className={`text-xs transition-colors duration-300 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-slate-600'
+                }`}>
+                  Level {user?.level} • {user?.rank}
+                </div>
+              </div>
+              
+              {/* User Avatar */}
+              <div className="relative">
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName}
+                    className="h-8 w-8 rounded-full border-2 border-primary-500"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {user?.displayName?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                {user?.isOnline && (
+                  <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+                )}
+              </div>
+            </div>
+
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -136,8 +172,8 @@ const Navbar: React.FC = () => {
               )}
             </button>
 
-            {/* User Info and Dropdown */}
-            <div className="relative">
+            {/* User Info and Dropdown - Hidden on mobile */}
+            <div className="relative hidden md:block">
                              <button
                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                  className={`flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 ${
