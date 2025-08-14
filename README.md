@@ -122,6 +122,7 @@ src/
 │   ├── AdminAuthContext.tsx # Admin authentication
 │   └── ThemeContext.tsx # Theme management
 ├── pages/              # Application pages
+│   ├── Landing.tsx     # Landing page (non-authenticated)
 │   ├── Home.tsx        # User dashboard
 │   ├── Login.tsx       # Unified login
 │   ├── Profile.tsx     # User/admin profile
@@ -129,7 +130,7 @@ src/
 │   ├── Battles.tsx     # Battle interface
 │   ├── Leaderboard.tsx # Rankings
 │   ├── Friends.tsx     # Social features
-│   ├── Problems.tsx    # Problem list
+│   ├── Problems.tsx    # Problem list (preview for non-auth)
 │   ├── Achievements.tsx # User achievements
 │   └── admin/          # Admin pages
 │       ├── AdminDashboard.tsx
@@ -146,6 +147,11 @@ src/
 ```
 
 ## 🎮 User Journey
+
+### Visitors (Non-Authenticated)
+1. **Land on** `/` (landing page) - showcases platform features
+2. **Browse Problems** at `/problems` - view available coding challenges
+3. **Login/Signup** at `/login` to access full features
 
 ### Regular Users
 1. **Register/Login** at `/login`

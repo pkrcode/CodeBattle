@@ -91,6 +91,39 @@ const Problems: React.FC = () => {
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto p-4">
+        {/* Login Prompt for Non-Authenticated Users */}
+        {!user && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-6 p-4 rounded-xl border ${
+              theme === 'dark' 
+                ? 'bg-blue-900/20 border-blue-700/50 text-blue-200' 
+                : 'bg-blue-50 border-blue-200 text-blue-800'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${
+                  theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'
+                }`}>
+                  <Code className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+                </div>
+                <div>
+                  <p className="font-medium">Login to Start Solving</p>
+                  <p className="text-sm opacity-80">Create an account to solve problems, track progress, and compete on leaderboards</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Login / Sign Up
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -256,7 +289,13 @@ const Problems: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 * index }}
               className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-gray-200 hover:border-gray-300'} backdrop-blur-sm rounded-xl border overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer`}
-              onClick={() => navigate(`/problem/${problem.id}`)}
+              onClick={() => {
+                if (user) {
+                  navigate(`/problem/${problem.id}`);
+                } else {
+                  navigate('/login');
+                }
+              }}
             >
               <div className="p-6">
                 {/* Header */}
@@ -292,8 +331,18 @@ const Problems: React.FC = () => {
                       <span>{problem.testCases.length} tests</span>
                     </div>
                   </div>
-                  <button className="px-3 py-1 bg-primary-600 text-white text-xs rounded-lg hover:bg-primary-700 transition-colors">
-                    Solve
+                  <button 
+                    className="px-3 py-1 bg-primary-600 text-white text-xs rounded-lg hover:bg-primary-700 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (user) {
+                        navigate(`/problem/${problem.id}`);
+                      } else {
+                        navigate('/login');
+                      }
+                    }}
+                  >
+                    {user ? 'Solve' : 'Login to Solve'}
                   </button>
                 </div>
               </div>

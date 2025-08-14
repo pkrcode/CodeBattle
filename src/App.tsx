@@ -9,6 +9,7 @@ import AdminNavbar from './components/AdminNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // User Pages
+import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -49,7 +50,7 @@ const UserApp: React.FC = () => {
       <main className={user ? 'pt-16' : ''}>
         <Routes>
           <Route path="/" element={
-            user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            user ? <Navigate to="/dashboard" /> : <Landing />
           } />
           <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
           <Route path="/dashboard" element={
@@ -83,9 +84,11 @@ const UserApp: React.FC = () => {
             </ProtectedRoute>
           } />
           <Route path="/problems" element={
-            <ProtectedRoute>
+            user ? (
               <Problems />
-            </ProtectedRoute>
+            ) : (
+              <Navigate to="/login" />
+            )
           } />
           <Route path="/problem/:problemId" element={
             <ProtectedRoute>
