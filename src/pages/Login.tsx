@@ -77,10 +77,10 @@ const Login: React.FC = () => {
                          <div className="flex items-center space-x-3 mb-6">
                <img 
                  src="/logo.svg" 
-                 alt="Coding Battle Logo" 
+                 alt="CodeBattle Logo" 
                  className="w-12 h-12 rounded-xl"
                />
-               <h1 className="text-3xl font-bold text-white">Coding Battle</h1>
+               <h1 className="text-3xl font-bold text-white">CodeBattle</h1>
              </div>
             <h2 className="text-2xl font-bold text-white mb-4">
               The Ultimate Competitive Programming Platform
@@ -125,10 +125,10 @@ const Login: React.FC = () => {
              <div className="flex items-center justify-center space-x-3 mb-4">
                <img 
                  src="/logo.svg" 
-                 alt="Coding Battle Logo" 
+                 alt="CodeBattle Logo" 
                  className="w-10 h-10 rounded-lg"
                />
-               <h1 className="text-2xl font-bold text-white">Coding Battle</h1>
+               <h1 className="text-2xl font-bold text-white">CodeBattle</h1>
              </div>
            </div>
 

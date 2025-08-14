@@ -3,22 +3,13 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
-  Zap, 
   Trophy, 
-  Target, 
-  Clock, 
-  Star, 
-  TrendingUp, 
   Users, 
   Award,
   Play,
-  Crown,
-  Flame,
-  CheckCircle,
   Code,
   Sword,
   BarChart3,
-  UserPlus,
   Shield
 } from 'lucide-react';
 

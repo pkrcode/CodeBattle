@@ -12,9 +12,7 @@ import {
   Target,
   Zap,
   Flame,
-  Crown,
-  Users,
-  TrendingUp
+  Users
 } from 'lucide-react';
 import { Problem } from '../types';
 import { getAllProblems } from '../data/problemBank';

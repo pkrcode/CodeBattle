@@ -69,13 +69,13 @@ const Navbar: React.FC = () => {
           <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <img 
               src="/logo.svg" 
-              alt="Coding Battle Logo" 
+              alt="CodeBattle Logo" 
               className="h-8 w-8 rounded-lg"
             />
             <span className={`text-xl font-bold transition-colors duration-300 ${
               theme === 'dark' ? 'text-white' : 'text-slate-900'
             }`}>
-              Coding Battle
+              CodeBattle
             </span>
           </Link>
 
