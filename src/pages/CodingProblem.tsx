@@ -185,6 +185,24 @@ const CodingProblem: React.FC = () => {
     }
   }, [output]);
 
+  // Smoothly jump to the terminal output panel
+  const scrollToTerminal = () => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // When terminal can't scroll further, let the page scroll
+  const handleTerminalWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+    if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+      window.scrollBy({ top: e.deltaY, left: 0, behavior: 'auto' });
+      e.preventDefault();
+    }
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'text-green-400';
@@ -441,6 +459,19 @@ const CodingProblem: React.FC = () => {
               )}
               
               <button
+                onClick={scrollToTerminal}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                  theme === 'dark' 
+                    ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <Terminal className="w-4 h-4" />
+                <span>Output</span>
+              </button>
+              <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
+
+              <button
                 onClick={resetCode}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                   theme === 'dark' 
@@ -623,6 +654,7 @@ const CodingProblem: React.FC = () => {
               </div>
               <div 
                 ref={terminalRef}
+                onWheel={handleTerminalWheel}
                 className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'} min-h-64 max-h-96`}
               >
                 <pre className={`text-sm font-mono whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
