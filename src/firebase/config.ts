@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
@@ -24,5 +24,12 @@ export const db = getFirestore(app);
 
 // Initialize Analytics (optional - only in browser environment)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
+// Firebase connection utilities
+export const firebaseUtils = {
+  enableNetwork: () => enableNetwork(db),
+  disableNetwork: () => disableNetwork(db),
+  isOnline: () => navigator.onLine
+};
 
 export default app; 

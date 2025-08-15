@@ -7,6 +7,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import Navbar from './components/Navbar';
 import AdminNavbar from './components/AdminNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import FirebaseStatus from './components/FirebaseStatus';
 
 // User Pages
 import Landing from './pages/Landing';
@@ -46,6 +47,7 @@ const UserApp: React.FC = () => {
         ? 'bg-black'
         : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
     }`}>
+      <FirebaseStatus />
       {user && <Navbar />}
       <main className={user ? 'pt-16' : ''}>
         <Routes>
@@ -111,6 +113,7 @@ const AdminApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black transition-colors duration-300">
+      <FirebaseStatus />
       {adminUser && <AdminNavbar />}
       <main className="pt-16">
         <Routes>

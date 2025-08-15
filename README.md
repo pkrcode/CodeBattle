@@ -50,7 +50,10 @@ A competitive programming platform with a comprehensive admin system, where deve
 ## 🛠 Tech Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS
-- **Backend**: Firebase (Authentication, Firestore)
+- **Backend**: 
+  - Firebase (Authentication, Firestore)
+  - Node.js/Express (Code Execution Service)
+- **Code Execution**: Multi-language support (Python, C++, JavaScript, Java)
 - **State Management**: React Context API
 - **Animations**: Framer Motion
 - **Icons**: Lucide React + Custom SVG components
@@ -63,6 +66,9 @@ A competitive programming platform with a comprehensive admin system, where deve
 - Node.js (v16 or higher)
 - npm or yarn
 - Firebase account
+- Python (for Python code execution)
+- GCC/G++ (for C++ code execution)
+- Java JDK (for Java code execution)
 
 ### Installation
 
@@ -83,17 +89,62 @@ A competitive programming platform with a comprehensive admin system, where deve
    - Create a Firestore database
    - Copy your Firebase config to `src/firebase/config.ts`
 
-4. **Start the development server**
+4. **Start the code execution backend** (in a new terminal)
+   ```bash
+   # Windows
+   start-backend.bat
+   
+   # Unix/Linux/Mac
+   chmod +x start-backend.sh
+   ./start-backend.sh
+   
+   # Or manually:
+   cd backend
+   npm install
+   npm run dev
+   ```
+
+5. **Start the frontend development server** (in another terminal)
    ```bash
    npm start
    ```
 
-5. **Access the application**
+6. **Access the application**
    - **User Portal**: `http://localhost:3000/dashboard`
    - **Admin Portal**: `http://localhost:3000/admin/dashboard`
    - **Login**: `http://localhost:3000/login`
+   - **Code Execution Backend**: `http://localhost:5000`
 
 ## 🔧 Configuration
+
+### Code Execution System
+
+The platform now includes a real code execution system that supports multiple programming languages:
+
+#### Supported Languages
+- **Python**: Direct execution with `python` command
+- **C++**: Compiled with `g++` and executed
+- **JavaScript**: Executed with `node`
+- **Java**: Compiled with `javac` and executed with `java`
+
+#### Features
+- **Real-time Execution**: Code runs in isolated environments
+- **Test Case Validation**: Automatic validation against expected outputs
+- **Problem-specific Handlers**: Custom validation logic for different problem types
+- **Security**: Sandboxed execution with timeouts and memory limits
+- **Error Handling**: Detailed error messages for compilation and runtime errors
+
+#### Backend Status
+The frontend includes a real-time backend status indicator that shows:
+- 🟢 **Online**: Backend is running and ready
+- 🔴 **Offline**: Backend is not available
+- 🟡 **Checking**: Checking backend status
+
+#### Testing the Backend
+```bash
+cd backend
+npm test
+```
 
 ### Firebase Setup
 1. Go to [Firebase Console](https://console.firebase.google.com/)
