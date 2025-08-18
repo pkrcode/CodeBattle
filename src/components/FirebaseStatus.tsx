@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { firebaseUtils } from '../firebase/config';
 
 const FirebaseStatus: React.FC = () => {

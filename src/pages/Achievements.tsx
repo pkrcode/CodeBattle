@@ -1,24 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext'; // Not used in current implementation
 import { useTheme } from '../contexts/ThemeContext';
 import { 
   Award, 
-  Star, 
-  Trophy, 
-  Target, 
-  Zap,
-  Flame,
-  Crown,
-  Users,
-  TrendingUp,
   CheckCircle,
   Lock
 } from 'lucide-react';
 import { Achievement } from '../types';
 
 const Achievements: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Not used in current implementation
   const { theme } = useTheme();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');

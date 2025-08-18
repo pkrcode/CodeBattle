@@ -5,7 +5,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { 
   Zap, 
   Clock, 
-  Users, 
   Play, 
   Trophy, 
   Target, 
@@ -15,7 +14,7 @@ import {
   Flame,
   TrendingUp
 } from 'lucide-react';
-import { Match, Problem } from '../types';
+import { Match } from '../types';
 
 const Battles: React.FC = () => {
   const { user } = useAuth();

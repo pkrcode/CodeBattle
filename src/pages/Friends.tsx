@@ -6,10 +6,8 @@ import {
   Users, 
   UserPlus, 
   UserCheck, 
-  UserX, 
   MessageCircle,
   Search,
-  Crown,
   Target,
   Zap
 } from 'lucide-react';
@@ -144,17 +142,6 @@ const Friends: React.FC = () => {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
-  };
-
-  const getRankColor = (rank: string) => {
-    switch (rank) {
-      case 'Bronze': return 'text-amber-600';
-      case 'Silver': return 'text-gray-400';
-      case 'Gold': return 'text-yellow-500';
-      case 'Platinum': return 'text-cyan-500';
-      case 'Diamond': return 'text-purple-500';
-      default: return 'text-gray-300';
-    }
   };
 
   return (

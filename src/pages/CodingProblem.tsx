@@ -7,23 +7,18 @@ import {
   Play, 
   CheckCircle, 
   XCircle, 
-  Clock, 
   Code, 
   Terminal,
   ArrowLeft,
   Trophy,
-  Zap,
-  Save,
   RotateCcw,
   Send,
-  AlertCircle,
   GripVertical
 } from 'lucide-react';
 import { Problem } from '../types';
 import { getProblemById } from '../data/problemBank';
 import Editor from '@monaco-editor/react';
 import { codeExecutionService, TestResult } from '../utils/codeExecutionService';
-import About from '../components/About';
 
 // Add custom styles for Monaco Editor scrolling
 const editorStyles = `
@@ -44,11 +39,11 @@ const editorStyles = `
   }
 `;
 
-interface TestCase {
-  input: string;
-  output: string;
-  description: string;
-}
+// interface TestCase {
+//   input: string;
+//   output: string;
+//   description: string;
+// }
 
 const CodingProblem: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
@@ -64,7 +59,6 @@ const CodingProblem: React.FC = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [output, setOutput] = useState('');
   const [isSolved, setIsSolved] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [firebaseStatus, setFirebaseStatus] = useState<'online' | 'offline'>('online');
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // percentage
@@ -106,7 +100,7 @@ const CodingProblem: React.FC = () => {
       rightPaneRef.current?.scrollTo({ top: 0, behavior: 'auto' });
       terminalRef.current?.scrollTo({ top: 0, behavior: 'auto' });
     } catch {}
-  }, [problemId]);
+  }, [problemId, selectedLanguage]);
 
   // Update editor contents when language changes without affecting scroll
   useEffect(() => {
