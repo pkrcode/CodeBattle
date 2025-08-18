@@ -1,4 +1,18 @@
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5111';
+function resolveBackendUrl(): string {
+  // Highest priority: explicit env var
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  if (envUrl && envUrl.trim().length > 0) return envUrl;
+
+  // If running locally, prefer local backend
+  if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+    return 'http://localhost:5111';
+  }
+
+  // Fallback to Render backend in production
+  return 'https://codebattle-t3ll.onrender.com';
+}
+
+const BACKEND_URL = resolveBackendUrl();
 
 export interface TestCase {
   input: string;
