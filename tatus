@@ -1,0 +1,5 @@
+[33md563491[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m chore: force Vercel redeploy (latest main)
+[33m12da392[m chore: trigger fresh Vercel build (latest main)
+[33m621ea1d[m feat: auto-select Render backend URL when not on localhost (REACT_APP_BACKEND_URL overrideable)
+[33mc8fee05[m[33m ([m[1;31morigin/main[m[33m)[m chore: trigger Vercel redeploy
+[33mc939e04[m UX: output terminal improvements – back-to-terminal button, scroll chaining to page, auto-scroll to bottom
