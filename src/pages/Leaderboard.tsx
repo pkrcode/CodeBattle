@@ -5,12 +5,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { 
   Trophy, 
   Crown, 
-  TrendingUp, 
-  Users, 
   Star,
-  Medal,
-  Target,
-  Flame
+  Medal
 } from 'lucide-react';
 import { LeaderboardEntry, Season } from '../types';
 
@@ -170,14 +166,7 @@ const Leaderboard: React.FC = () => {
     }
   };
 
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1: return 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-yellow-500/30';
-      case 2: return 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 border-gray-500/30';
-      case 3: return 'bg-gradient-to-r from-amber-600/20 to-amber-700/20 border-amber-600/30';
-      default: return 'bg-slate-800/50 border-slate-700';
-    }
-  };
+
 
   const getTimeLeft = () => {
     if (!currentSeason) return '';

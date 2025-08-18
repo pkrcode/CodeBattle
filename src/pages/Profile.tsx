@@ -7,8 +7,6 @@ import {
   Edit, 
   Save, 
   X, 
-  Upload, 
-  User, 
   Star, 
   Trophy, 
   Target, 
