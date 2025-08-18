@@ -10,7 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 5111;
 
 // Middleware
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

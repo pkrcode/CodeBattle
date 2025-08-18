@@ -63,10 +63,10 @@ const AdminDashboard: React.FC = () => {
   // Show loading if admin context is still loading
   if (adminLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading admin dashboard...</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${theme === 'dark' ? 'border-white' : 'border-slate-900'} mx-auto mb-4`}></div>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -75,9 +75,9 @@ const AdminDashboard: React.FC = () => {
   // Redirect if not admin
   if (!adminUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <p className="text-white text-lg">Access denied. Admin privileges required.</p>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Access denied. Admin privileges required.</p>
         </div>
       </div>
     );
@@ -230,7 +230,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className={`min-h-screen p-6 ${
-      theme === 'dark' ? 'bg-black' : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
+      theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
     }`}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
@@ -261,7 +261,7 @@ const AdminDashboard: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between">
@@ -275,13 +275,15 @@ const AdminDashboard: React.FC = () => {
                   {users.length}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
+              <div className={`p-3 rounded-full ${
+                theme === 'dark' ? 'bg-blue-900/50' : 'bg-blue-100'
+              }`}>
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between">
@@ -295,13 +297,15 @@ const AdminDashboard: React.FC = () => {
                   {users.filter(u => u.isOnline).length}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
+              <div className={`p-3 rounded-full ${
+                theme === 'dark' ? 'bg-green-900/50' : 'bg-green-100'
+              }`}>
                 <Activity className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between">
@@ -315,13 +319,15 @@ const AdminDashboard: React.FC = () => {
                   25
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
+              <div className={`p-3 rounded-full ${
+                theme === 'dark' ? 'bg-purple-900/50' : 'bg-purple-100'
+              }`}>
                 <Shield className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between">
@@ -335,7 +341,9 @@ const AdminDashboard: React.FC = () => {
                   1,234
                 </p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
+              <div className={`p-3 rounded-full ${
+                theme === 'dark' ? 'bg-yellow-900/50' : 'bg-yellow-100'
+              }`}>
                 <TrendingUp className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
@@ -347,7 +355,7 @@ const AdminDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`card battle-card ${
+          className={`rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           } overflow-hidden`}
         >

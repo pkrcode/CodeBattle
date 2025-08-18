@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -12,14 +13,20 @@ import {
   Award,
   Activity,
   Trophy,
-  User
+  User,
+  Sun,
+  Moon,
+  Menu,
+  X
 } from 'lucide-react';
 
 const AdminNavbar: React.FC = () => {
   const { adminUser, adminLogout } = useAdminAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navItems = [
     { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
@@ -52,20 +59,29 @@ const AdminNavbar: React.FC = () => {
     };
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
+
   return (
     <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b bg-black/90 border-slate-700"
+      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-all duration-300 ${
+        theme === 'dark' 
+          ? 'bg-slate-900/90 border-slate-700/50' 
+          : 'bg-white/90 border-slate-200/50'
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <Link to="/admin/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">
+            <span className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
               Admin Portal
             </span>
           </Link>
@@ -82,8 +98,10 @@ const AdminNavbar: React.FC = () => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+                      : theme === 'dark'
+                      ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -93,64 +111,104 @@ const AdminNavbar: React.FC = () => {
             })}
           </div>
 
-          {/* Right Side - Admin Dropdown Menu */}
+          {/* Mobile menu toggle */}
+          <button
+            className={`md:hidden p-2 rounded-xl ${theme === 'dark' ? 'text-white hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
+            onClick={() => setIsMobileOpen((v) => !v)}
+            aria-label="Toggle navigation"
+          >
+            {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* Right Side - Theme Toggle and Admin Dropdown Menu */}
           <div className="flex items-center space-x-4" ref={dropdownRef}>
+            {/* Theme Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl transition-all duration-200 ${
+                theme === 'dark'
+                  ? 'bg-slate-800 hover:bg-slate-700 text-yellow-400'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.button>
+
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 text-gray-300 hover:bg-slate-800 hover:text-white"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">
-                    {adminUser?.displayName?.charAt(0) || 'A'}
-                  </span>
+                <div className="relative">
+                  <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                 </div>
-                <span className="hidden sm:block text-sm font-medium">
-                  {adminUser?.displayName || 'Admin'}
-                </span>
+                <span className="hidden sm:block font-medium">{adminUser?.displayName || 'Admin'}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700 py-2"
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className={`absolute right-0 mt-2 w-64 rounded-2xl shadow-xl border ${
+                    theme === 'dark'
+                      ? 'bg-slate-900 border-slate-700'
+                      : 'bg-white border-slate-200'
+                  }`}
                 >
-                  <div className="px-4 py-2 border-b border-slate-700">
-                    <p className="text-sm text-gray-400">Signed in as</p>
-                    <p className="text-sm font-medium text-white">{adminUser?.email}</p>
-                  </div>
-                  
-                  <Link
-                    to="/admin/settings"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors duration-200"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </Link>
+                  <div className="p-4">
+                    {/* Admin info */}
+                    <div className="flex items-center space-x-3 mb-4 p-3 rounded-xl bg-gradient-to-r from-primary-500/10 to-secondary-500/10">
+                      <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          {adminUser?.displayName || 'Admin'}
+                        </h3>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {adminUser?.role || 'admin'}
+                        </p>
+                      </div>
+                    </div>
 
-                  <Link
-                    to="/admin/profile"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors duration-200"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Profile</span>
-                  </Link>
-                  
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors duration-200"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </button>
+                    {/* Menu items */}
+                    <div className="space-y-1">
+                      <Link
+                        to="/admin/settings"
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-xl transition-colors ${
+                          theme === 'dark' 
+                            ? 'text-slate-300 hover:bg-slate-800' 
+                            : 'text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-xl transition-colors w-full ${
+                          theme === 'dark'
+                            ? 'text-error-400 hover:bg-error-900/20'
+                            : 'text-error-600 hover:bg-error-50'
+                        }`}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </div>
@@ -158,30 +216,33 @@ const AdminNavbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden border-t border-slate-700">
-        <div className="px-4 py-2 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+      {/* Mobile menu panel */}
+      {isMobileOpen && (
+        <div className={`md:hidden border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className="px-4 py-3 grid grid-cols-1 gap-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow'
+                      : theme === 'dark'
+                      ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </motion.nav>
   );
 };

@@ -393,145 +393,144 @@ const Battles: React.FC = () => {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Active Battles */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className={`text-xl font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            <Zap className="w-5 h-5 mr-2 text-primary-400" />
-            Active Battles
-          </h2>
-          <div className="space-y-4">
-            {activeBattles.map((battle) => (
-                             <div
-                 key={battle.id}
-                 className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-gray-200 hover:border-gray-300'} backdrop-blur-sm rounded-xl p-6 border transition-all duration-200 cursor-pointer`}
-                 onClick={() => setSelectedBattle(battle)}
-               >
-                 <div className="flex items-center justify-between mb-4">
-                   <div className="flex items-center space-x-3">
-                     <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
-                       <Crown className="w-6 h-6 text-white" />
-                     </div>
-                     <div>
-                       <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
-                       <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>3-day battle</p>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <div className={`text-sm flex items-center space-x-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                       <Clock className="w-4 h-4" />
-                       <span>{getTimeLeft(battle.endTime)}</span>
-                     </div>
-                     <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                       {battle.player1Score} - {battle.player2Score}
-                     </div>
-                   </div>
-                 </div>
+      {/* Active Battles */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="mb-8"
+      >
+        <h2 className={`text-xl font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <Zap className="w-5 h-5 mr-2 text-primary-400" />
+          Active Battles
+        </h2>
+        <div className="space-y-4">
+          {activeBattles.map((battle) => (
+            <div
+              key={battle.id}
+              className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-gray-200 hover:border-gray-300'} backdrop-blur-sm rounded-xl p-6 border transition-all duration-200 cursor-pointer`}
+              onClick={() => setSelectedBattle(battle)}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>3-day battle</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-sm flex items-center space-x-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <Clock className="w-4 h-4" />
+                    <span>{getTimeLeft(battle.endTime)}</span>
+                  </div>
+                  <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {battle.player1Score} - {battle.player2Score}
+                  </div>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {battle.problems.map((problem) => (
-                    <div
-                      key={problem.id}
-                      className={`p-2 rounded-lg text-center ${
-                        problem.solvedBy.includes(user?.uid || '')
-                          ? 'bg-green-500/10 border border-green-500/30'
-                          : 'bg-slate-700/50 border border-slate-600'
-                      }`}
-                    >
-                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{problem.title}</div>
-                      <div className={`text-xs px-2 py-1 rounded ${getDifficultyColor(problem.difficulty)}`}>
-                        {problem.difficulty}
-                      </div>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {battle.problems.map((problem) => (
+                  <div
+                    key={problem.id}
+                    className={`p-2 rounded-lg text-center ${
+                      problem.solvedBy.includes(user?.uid || '')
+                        ? 'bg-green-500/10 border border-green-500/30'
+                        : 'bg-slate-700/50 border border-slate-600'
+                    }`}
+                  >
+                    <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{problem.title}</div>
+                    <div className={`text-xs px-2 py-1 rounded ${getDifficultyColor(problem.difficulty)}`}>
+                      {problem.difficulty}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-primary-400">+{battle.xpReward} XP</span>
-                  <span className="text-gold-400">+{battle.goldXpReward} Gold</span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-primary-400">+{battle.xpReward} XP</span>
+                <span className="text-gold-400">+{battle.goldXpReward} Gold</span>
+              </div>
+            </div>
+          ))}
+          {activeBattles.length === 0 && (
+            <div className="text-center py-8">
+              <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                <Zap className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+              </div>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No active battles</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Start a new battle to compete!</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Battle History */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className={`text-xl font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
+          Battle History
+        </h2>
+        <div className="space-y-4">
+          {battleHistory.map((battle) => (
+            <div
+              key={battle.id}
+              className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    battle.winner === user?.uid
+                      ? 'bg-gradient-to-r from-green-500 to-green-600'
+                      : 'bg-gradient-to-r from-red-500 to-red-600'
+                  }`}>
+                    {battle.winner === user?.uid ? (
+                      <Trophy className="w-6 h-6 text-white" />
+                    ) : (
+                      <X className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Completed</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-lg font-bold ${
+                    battle.winner === user?.uid ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {battle.player1Score} - {battle.player2Score}
+                  </div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {battle.winner === user?.uid ? 'Victory' : 'Defeat'}
+                  </div>
                 </div>
               </div>
-            ))}
-                         {activeBattles.length === 0 && (
-               <div className="text-center py-8">
-                 <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                   <Zap className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                 </div>
-                 <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No active battles</p>
-                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Start a new battle to compete!</p>
-               </div>
-             )}
-          </div>
-        </motion.div>
 
-        {/* Battle History */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className={`text-xl font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
-            Battle History
-          </h2>
-          <div className="space-y-4">
-            {battleHistory.map((battle) => (
-                             <div
-                 key={battle.id}
-                 className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}
-               >
-                 <div className="flex items-center justify-between mb-4">
-                   <div className="flex items-center space-x-3">
-                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                       battle.winner === user?.uid
-                         ? 'bg-gradient-to-r from-green-500 to-green-600'
-                         : 'bg-gradient-to-r from-red-500 to-red-600'
-                     }`}>
-                       {battle.winner === user?.uid ? (
-                         <Trophy className="w-6 h-6 text-white" />
-                       ) : (
-                         <X className="w-6 h-6 text-white" />
-                       )}
-                     </div>
-                     <div>
-                       <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
-                       <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Completed</p>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <div className={`text-lg font-bold ${
-                       battle.winner === user?.uid ? 'text-green-400' : 'text-red-400'
-                     }`}>
-                       {battle.player1Score} - {battle.player2Score}
-                     </div>
-                     <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                       {battle.winner === user?.uid ? 'Victory' : 'Defeat'}
-                     </div>
-                   </div>
-                 </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-primary-400">+{battle.xpReward} XP</span>
-                  <span className="text-gold-400">+{battle.goldXpReward} Gold</span>
-                </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-primary-400">+{battle.xpReward} XP</span>
+                <span className="text-gold-400">+{battle.goldXpReward} Gold</span>
               </div>
-            ))}
-                         {battleHistory.length === 0 && (
-               <div className="text-center py-8">
-                 <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                   <Trophy className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                 </div>
-                 <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No battle history</p>
-                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Complete your first battle to see history!</p>
-               </div>
-             )}
-          </div>
-        </motion.div>
-      </div>
+            </div>
+          ))}
+          {battleHistory.length === 0 && (
+            <div className="text-center py-8">
+              <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                <Trophy className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+              </div>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No battle history</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Complete your first battle to see history!</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Battle Detail Modal */}
       {selectedBattle && (

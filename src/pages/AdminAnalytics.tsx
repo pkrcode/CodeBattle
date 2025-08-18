@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
@@ -9,19 +9,103 @@ import {
   Activity,
   Award
 } from 'lucide-react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const AdminAnalytics: React.FC = () => {
   const { theme } = useTheme();
   const { adminUser, loading: adminLoading } = useAdminAuth();
   const [timeRange, setTimeRange] = useState('7d');
+  const [users, setUsers] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+      const list: any[] = [];
+      snap.forEach((docu) => list.push({ id: docu.id, ...docu.data() }));
+      setUsers(list);
+    });
+
+    const unsubQuestions = onSnapshot(collection(db, 'questions'), (snap) => {
+      const list: any[] = [];
+      snap.forEach((docu) => list.push({ id: docu.id, ...docu.data() }));
+      setQuestions(list);
+    });
+
+    // Matches collection might not exist yet; empty snapshot is fine
+    const unsubMatches = onSnapshot(collection(db, 'matches'), (snap) => {
+      const list: any[] = [];
+      snap.forEach((docu) => list.push({ id: docu.id, ...docu.data() }));
+      setMatches(list);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubQuestions();
+      unsubMatches();
+    };
+  }, []);
+
+  const now = Date.now();
+  const rangeMs = useMemo(() => {
+    switch (timeRange) {
+      case '7d': return 7 * 24 * 60 * 60 * 1000;
+      case '30d': return 30 * 24 * 60 * 60 * 1000;
+      case '90d': return 90 * 24 * 60 * 60 * 1000;
+      case '1y': return 365 * 24 * 60 * 60 * 1000;
+      default: return 7 * 24 * 60 * 60 * 1000;
+    }
+  }, [timeRange]);
+
+  const totalUsers = useMemo(
+    () => users.filter((u) => !u.isBot).length,
+    [users]
+  );
+  const activeUsers = useMemo(
+    () => users.filter((u) => !u.isBot && !!u.isOnline).length,
+    [users]
+  );
+  const totalBattles = useMemo(
+    () => matches.length,
+    [matches]
+  );
+  const totalQuestions = useMemo(
+    () => questions.length,
+    [questions]
+  );
+  const newUsers = useMemo(() => {
+    const cutoff = now - rangeMs;
+    return users.filter((u) => {
+      const ts = u.createdAt?.toDate?.() ? u.createdAt.toDate() : (u.createdAt ? new Date(u.createdAt) : undefined);
+      return !u.isBot && ts && ts.getTime() >= cutoff;
+    }).length;
+  }, [users, rangeMs, now]);
+
+  const difficultyDistribution = useMemo(() => {
+    const counts: Record<string, number> = { Easy: 0, Medium: 0, Hard: 0 };
+    questions.forEach((q) => {
+      const d = (q.difficulty || '').toLowerCase();
+      if (d === 'easy') counts.Easy += 1;
+      else if (d === 'medium') counts.Medium += 1;
+      else if (d === 'hard') counts.Hard += 1;
+    });
+    const total = counts.Easy + counts.Medium + counts.Hard || 1;
+    return [
+      { difficulty: 'Easy', count: counts.Easy, percentage: Math.round((counts.Easy / total) * 100) },
+      { difficulty: 'Medium', count: counts.Medium, percentage: Math.round((counts.Medium / total) * 100) },
+      { difficulty: 'Hard', count: counts.Hard, percentage: Math.round((counts.Hard / total) * 100) },
+    ];
+  }, [questions]);
 
   // Show loading if admin context is still loading
   if (adminLoading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <div className="spinner mx-auto mb-4"></div>
-          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Loading admin analytics...</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${theme === 'dark' ? 'border-white' : 'border-slate-900'} mx-auto mb-4`}></div>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Loading admin analytics...</p>
         </div>
       </div>
     );
@@ -30,30 +114,20 @@ const AdminAnalytics: React.FC = () => {
   // Redirect if not admin
   if (!adminUser) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Access denied. Admin privileges required.</p>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Access denied. Admin privileges required.</p>
         </div>
       </div>
     );
   }
 
-  // Mock analytics data
-  const analyticsData = {
-    totalUsers: 15420,
-    activeUsers: 8920,
-    totalBattles: 45678,
-    totalQuestions: 234,
-    newUsers: 156,
-    difficultyDistribution: [
-      { difficulty: 'Easy', count: 45, percentage: 52 },
-      { difficulty: 'Medium', count: 28, percentage: 34 },
-      { difficulty: 'Hard', count: 12, percentage: 14 }
-    ]
-  };
+  // Derived analytics from real-time data
 
   return (
-    <div className={`min-h-screen p-6 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen p-6 ${
+      theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
+    }`}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -99,7 +173,7 @@ const AdminAnalytics: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -107,18 +181,18 @@ const AdminAnalytics: React.FC = () => {
                 <Users className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{analyticsData.totalUsers.toLocaleString()}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Users</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{totalUsers.toLocaleString()}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Total Users</div>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
               <span className="text-green-400">+12.5%</span>
-              <span className="text-gray-400 ml-1">from last month</span>
+              <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'} ml-1`}>from last month</span>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -126,18 +200,18 @@ const AdminAnalytics: React.FC = () => {
                 <Activity className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{analyticsData.activeUsers.toLocaleString()}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Active Users</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{activeUsers.toLocaleString()}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Active Users</div>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
               <span className="text-green-400">+8.3%</span>
-              <span className="text-gray-400 ml-1">from last month</span>
+              <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'} ml-1`}>from last month</span>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -145,18 +219,18 @@ const AdminAnalytics: React.FC = () => {
                 <Award className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{analyticsData.totalBattles.toLocaleString()}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Battles</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{totalBattles.toLocaleString()}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Total Battles</div>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
               <span className="text-green-400">+15.2%</span>
-              <span className="text-gray-400 ml-1">from last month</span>
+              <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'} ml-1`}>from last month</span>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -164,14 +238,14 @@ const AdminAnalytics: React.FC = () => {
                 <BarChart3 className="w-6 h-6 text-yellow-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{analyticsData.totalQuestions}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Questions</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{totalQuestions}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Total Questions</div>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
               <span className="text-green-400">+5.7%</span>
-              <span className="text-gray-400 ml-1">from last month</span>
+              <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'} ml-1`}>from last month</span>
             </div>
           </div>
         </motion.div>
@@ -184,25 +258,25 @@ const AdminAnalytics: React.FC = () => {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           {/* Difficulty Distribution */}
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Difficulty Distribution</h3>
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Difficulty Distribution</h3>
               <BarChart3 className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-4">
-              {analyticsData.difficultyDistribution.map((item, index) => (
+              {difficultyDistribution.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-3 h-3 rounded-full ${
                       item.difficulty === 'Easy' ? 'bg-green-500' :
                       item.difficulty === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
                     }`}></div>
-                    <span className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{item.difficulty}</span>
+                    <span className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.difficulty}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-slate-700 rounded-full h-2">
+                    <div className={`w-16 rounded-full h-2 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
                       <div 
                         className={`h-2 rounded-full ${
                           item.difficulty === 'Easy' ? 'bg-green-500' :
@@ -211,7 +285,7 @@ const AdminAnalytics: React.FC = () => {
                         style={{ width: `${item.percentage}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-400 w-8 text-right">{item.count}</span>
+                    <span className={`text-sm w-8 text-right ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>{item.count}</span>
                   </div>
                 </div>
               ))}
@@ -219,73 +293,73 @@ const AdminAnalytics: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Recent Activity</h3>
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Recent Activity</h3>
               <Activity className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
-                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>New user registered</div>
-                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>2 minutes ago</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>New user registered</div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>2 minutes ago</div>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div className="flex-1">
-                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Battle completed</div>
-                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>5 minutes ago</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Battle completed</div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>5 minutes ago</div>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="text-sm text-white">Question solved</div>
-                  <div className="text-xs text-gray-400">8 minutes ago</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Question solved</div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>8 minutes ago</div>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="text-sm text-white">Achievement unlocked</div>
-                  <div className="text-xs text-gray-400">12 minutes ago</div>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Achievement unlocked</div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>12 minutes ago</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-white">Quick Stats</h3>
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Quick Stats</h3>
               <BarChart3 className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">New Users Today</span>
-                <span className="text-sm font-medium text-white">{analyticsData.newUsers}</span>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>New Users Today</span>
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{newUsers}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Battles Today</span>
-                <span className="text-sm font-medium text-white">234</span>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Battles Today</span>
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>234</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Questions Solved</span>
-                <span className="text-sm font-medium text-white">156</span>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Questions Solved</span>
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>156</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Avg Session Time</span>
-                <span className="text-sm font-medium text-white">24m</span>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Avg Session Time</span>
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>24m</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Completion Rate</span>
-                <span className="text-sm font-medium text-white">87.3%</span>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Completion Rate</span>
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>87.3%</span>
               </div>
             </div>
           </div>

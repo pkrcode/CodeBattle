@@ -4,6 +4,7 @@ export interface User {
   displayName: string;
   photoURL?: string | null;
   profileIcon?: string;
+  isBot?: boolean;
   xp: number;
   goldXp: number;
   level: number;
@@ -222,7 +223,7 @@ export interface Event {
   endDate: Date;
   registrationDeadline: Date;
   maxParticipants: number;
-  currentParticipants: number;
+  participants?: string[]; // userIds registered for the event
   rewards: EventReward[];
   rules: string[];
   isActive: boolean;

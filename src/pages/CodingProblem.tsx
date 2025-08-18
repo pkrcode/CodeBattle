@@ -71,6 +71,8 @@ const CodingProblem: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const leftPaneRef = useRef<HTMLDivElement>(null);
+  const rightPaneRef = useRef<HTMLDivElement>(null);
 
   const scrollToTerminal = () => {
     if (terminalRef.current) {
@@ -89,13 +91,29 @@ const CodingProblem: React.FC = () => {
     }
   };
 
+  // Load problem on route change and scroll to top
   useEffect(() => {
     const foundProblem = getProblemById(problemId || '');
     if (foundProblem) {
       setProblem(foundProblem);
       setCode(foundProblem.starterCode[selectedLanguage]);
     }
-  }, [problemId, selectedLanguage]);
+
+    // Ensure the page starts at the top
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      leftPaneRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+      rightPaneRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+      terminalRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    } catch {}
+  }, [problemId]);
+
+  // Update editor contents when language changes without affecting scroll
+  useEffect(() => {
+    if (problem) {
+      setCode(problem.starterCode[selectedLanguage]);
+    }
+  }, [selectedLanguage, problem]);
 
   useEffect(() => {
     // Check backend status on component mount
@@ -390,28 +408,6 @@ const CodingProblem: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Language Selector */}
-            <div className="flex items-center space-x-2">
-              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Language:</span>
-              <div className="flex space-x-1">
-                {(['cpp', 'python', 'javascript', 'java'] as const).map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => setSelectedLanguage(lang)}
-                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                      selectedLanguage === lang
-                        ? 'bg-primary-600 text-white'
-                        : theme === 'dark' 
-                          ? 'bg-slate-700 text-gray-300 hover:text-white' 
-                          : 'bg-gray-200 text-gray-700 hover:text-gray-900'
-                    }`}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
             <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
             
             <div className="flex items-center space-x-2">
@@ -519,6 +515,7 @@ const CodingProblem: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6 overflow-y-auto pr-2 flex flex-col h-full"
             style={{ width: `${leftPanelWidth}%` }}
+            ref={leftPaneRef}
           >
             <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
               <h2 className={`text-lg font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
@@ -572,14 +569,34 @@ const CodingProblem: React.FC = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6 overflow-y-auto pr-2 flex-1 flex flex-col h-full"
+            ref={rightPaneRef}
           >
 
             {/* Code Editor */}
             <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl border overflow-hidden flex flex-col`}>
               <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
-                <div className="flex items-center space-x-2">
-                  <Code className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Code Editor</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Code className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Code Editor</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {(['cpp', 'python', 'javascript', 'java'] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => setSelectedLanguage(lang)}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          selectedLanguage === lang
+                            ? 'bg-primary-600 text-white'
+                            : theme === 'dark'
+                              ? 'bg-slate-600 text-gray-200 hover:bg-slate-500'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {lang.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div 
@@ -698,8 +715,7 @@ const CodingProblem: React.FC = () => {
         </div>
       </div>
       
-      {/* About Section */}
-      <About />
+      
     </div>
   );
 };

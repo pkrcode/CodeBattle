@@ -200,31 +200,31 @@ const Achievements: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-400">{stats.rarityCounts.common}</div>
-            <div className="text-sm text-gray-400">Common</div>
+            <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-slate-700'}`}>{stats.rarityCounts.common}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Common</div>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-400">{stats.rarityCounts.rare}</div>
-            <div className="text-sm text-gray-400">Rare</div>
+            <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{stats.rarityCounts.rare}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Rare</div>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-400">{stats.rarityCounts.epic}</div>
-            <div className="text-sm text-gray-400">Epic</div>
+            <div className="text-2xl font-bold text-purple-500 dark:text-purple-400">{stats.rarityCounts.epic}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Epic</div>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-400">{stats.rarityCounts.legendary}</div>
-            <div className="text-sm text-gray-400">Legendary</div>
+            <div className="text-2xl font-bold text-yellow-500 dark:text-yellow-400">{stats.rarityCounts.legendary}</div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Legendary</div>
           </div>
         </div>
       </motion.div>
@@ -236,12 +236,12 @@ const Achievements: React.FC = () => {
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
+        <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Overall Progress</h2>
-            <span className="text-sm text-gray-400">{stats.percentage}%</span>
+            <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Overall Progress</h2>
+            <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>{stats.percentage}%</span>
           </div>
-          <div className="w-full bg-slate-700 rounded-full h-3">
+          <div className={`w-full rounded-full h-3 ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-200'}`}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${stats.percentage}%` }}
@@ -265,7 +265,9 @@ const Achievements: React.FC = () => {
             className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
               filter === 'all'
                 ? 'bg-primary-600 text-white'
-                : 'bg-slate-700 text-gray-300 hover:text-white'
+                : theme === 'dark'
+                  ? 'bg-slate-700 text-gray-300 hover:text-white'
+                  : 'bg-gray-200 text-slate-700 hover:text-slate-900'
             }`}
           >
             All ({achievements.length})
@@ -275,7 +277,9 @@ const Achievements: React.FC = () => {
             className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
               filter === 'unlocked'
                 ? 'bg-green-600 text-white'
-                : 'bg-slate-700 text-gray-300 hover:text-white'
+                : theme === 'dark'
+                  ? 'bg-slate-700 text-gray-300 hover:text-white'
+                  : 'bg-gray-200 text-slate-700 hover:text-slate-900'
             }`}
           >
             Unlocked ({unlockedAchievements.length})
@@ -285,7 +289,9 @@ const Achievements: React.FC = () => {
             className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
               filter === 'locked'
                 ? 'bg-red-600 text-white'
-                : 'bg-slate-700 text-gray-300 hover:text-white'
+                : theme === 'dark'
+                  ? 'bg-slate-700 text-gray-300 hover:text-white'
+                  : 'bg-gray-200 text-slate-700 hover:text-slate-900'
             }`}
           >
             Locked ({lockedAchievements.length})
@@ -309,7 +315,7 @@ const Achievements: React.FC = () => {
             className={`relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-105 ${
               achievement.unlockedAt 
                 ? getRarityBg(achievement.rarity)
-                : 'bg-slate-800/50 border-slate-700'
+                : theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'
             }`}
           >
             {achievement.unlockedAt && (
@@ -322,14 +328,16 @@ const Achievements: React.FC = () => {
               <div className="flex items-center space-x-4 mb-4">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
                   achievement.unlockedAt 
-                    ? 'bg-white/20' 
-                    : 'bg-slate-700/50'
+                    ? (theme === 'dark' ? 'bg-white/20' : 'bg-gray-200') 
+                    : (theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-100')
                 }`}>
                   {achievement.unlockedAt ? achievement.icon : <Lock className="w-6 h-6 text-gray-500" />}
                 </div>
                 <div>
                   <h3 className={`font-semibold ${
-                    achievement.unlockedAt ? 'text-white' : 'text-gray-400'
+                    achievement.unlockedAt 
+                      ? (theme === 'dark' ? 'text-white' : 'text-gray-900') 
+                      : (theme === 'dark' ? 'text-gray-400' : 'text-gray-700')
                   }`}>
                     {achievement.name}
                   </h3>
@@ -342,13 +350,15 @@ const Achievements: React.FC = () => {
               </div>
 
               <p className={`text-sm mb-4 ${
-                achievement.unlockedAt ? 'text-gray-300' : 'text-gray-500'
+                achievement.unlockedAt 
+                  ? (theme === 'dark' ? 'text-gray-300' : 'text-gray-700') 
+                  : (theme === 'dark' ? 'text-gray-500' : 'text-gray-600')
               }`}>
                 {achievement.description}
               </p>
 
               {achievement.unlockedAt && (
-                <div className="text-xs text-gray-400">
+                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>
                   Unlocked {achievement.unlockedAt.toLocaleDateString()}
                 </div>
               )}
@@ -361,7 +371,7 @@ const Achievements: React.FC = () => {
                   achievement.rarity === 'rare' ? 'bg-blue-400' :
                   achievement.rarity === 'epic' ? 'bg-purple-400' :
                   'bg-yellow-400'
-                : 'bg-slate-600'
+                : (theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300')
             }`}></div>
           </motion.div>
         ))}

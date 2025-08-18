@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
 import { Zap, Trophy, Users } from 'lucide-react';
 
 const Login: React.FC = () => {
@@ -32,9 +34,21 @@ const Login: React.FC = () => {
     try {
       if (isLogin) {
         await login(email, password);
-        // After login, check if user is admin and redirect accordingly
-        // The admin context will automatically detect the admin user
-        // and the AppContent component will handle the redirect
+        // Immediately route based on role to avoid needing a manual refresh
+        try {
+          const current = auth.currentUser;
+          if (current) {
+            const userDoc = await getDoc(doc(db, 'users', current.uid));
+            const data = userDoc.data() as any;
+            if (data?.role === 'admin' || data?.role === 'superadmin') {
+              navigate('/admin/dashboard', { replace: true });
+            } else {
+              navigate('/dashboard', { replace: true });
+            }
+          }
+        } catch {
+          // fall back to existing redirects handled elsewhere
+        }
       } else {
         await register(email, password, displayName);
       }

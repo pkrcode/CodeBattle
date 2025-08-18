@@ -19,6 +19,9 @@ const AdminQuestions: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<'add' | 'edit'>('add');
+  const [form, setForm] = useState<Question | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
 
@@ -57,13 +60,99 @@ const AdminQuestions: React.FC = () => {
     loadQuestions();
   }, []);
 
+  // Helpers to open editor
+  const openAddEditor = () => {
+    const now = new Date();
+    const newQuestion: Question = {
+      id: (questions.length + 1).toString(),
+      title: '',
+      description: '',
+      difficulty: 'easy',
+      category: 'General',
+      tags: [],
+      testCases: [
+        { id: '1', input: '', expectedOutput: '', isHidden: false, description: '' }
+      ],
+      solution: '',
+      hints: [],
+      points: 10,
+      timeLimit: 30,
+      memoryLimit: 64,
+      createdBy: adminUser?.displayName || 'admin',
+      createdAt: now,
+      updatedAt: now,
+      isActive: true
+    };
+    setEditorMode('add');
+    setForm(newQuestion);
+    setIsEditorOpen(true);
+  };
+
+  const openEditEditor = (q: Question) => {
+    setEditorMode('edit');
+    // Deep clone to avoid mutating original until save
+    setForm(JSON.parse(JSON.stringify(q)) as Question);
+    setIsEditorOpen(true);
+  };
+
+  const updateFormField = (field: keyof Question, value: any) => {
+    if (!form) return;
+    setForm({ ...form, [field]: value, updatedAt: new Date() });
+  };
+
+  const addFormTag = (tag: string) => {
+    if (!form || !tag.trim()) return;
+    updateFormField('tags', Array.from(new Set([...(form.tags || []), tag.trim()])));
+  };
+
+  const removeFormTag = (tag: string) => {
+    if (!form) return;
+    updateFormField('tags', (form.tags || []).filter(t => t !== tag));
+  };
+
+  const addTestCase = () => {
+    if (!form) return;
+    const nextId = (form.testCases.length + 1).toString();
+    updateFormField('testCases', [...form.testCases, { id: nextId, input: '', expectedOutput: '', isHidden: false, description: '' }]);
+  };
+
+  const updateTestCase = (id: string, key: 'input' | 'expectedOutput' | 'isHidden' | 'description', value: any) => {
+    if (!form) return;
+    updateFormField('testCases', form.testCases.map(tc => tc.id === id ? { ...tc, [key]: value } : tc));
+  };
+
+  const removeTestCase = (id: string) => {
+    if (!form) return;
+    updateFormField('testCases', form.testCases.filter(tc => tc.id !== id));
+  };
+
+  const saveQuestion = () => {
+    if (!form) return;
+    if (!form.title.trim() || !form.description.trim()) {
+      alert('Title and description are required.');
+      return;
+    }
+    if (form.testCases.length === 0) {
+      alert('Please add at least one test case.');
+      return;
+    }
+
+    if (editorMode === 'add') {
+      setQuestions(prev => [...prev, form]);
+    } else {
+      setQuestions(prev => prev.map(q => q.id === form.id ? form : q));
+    }
+    setIsEditorOpen(false);
+    setForm(null);
+  };
+
   // Show loading if admin context is still loading
   if (adminLoading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <div className="spinner mx-auto mb-4"></div>
-          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Loading admin questions...</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${theme === 'dark' ? 'border-white' : 'border-slate-900'} mx-auto mb-4`}></div>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Loading admin questions...</p>
         </div>
       </div>
     );
@@ -72,9 +161,9 @@ const AdminQuestions: React.FC = () => {
   // Redirect if not admin
   if (!adminUser) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
         <div className="text-center">
-          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Access denied. Admin privileges required.</p>
+          <p className={`text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Access denied. Admin privileges required.</p>
         </div>
       </div>
     );
@@ -97,7 +186,9 @@ const AdminQuestions: React.FC = () => {
   });
 
   return (
-    <div className={`min-h-screen p-6 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen p-6 ${
+      theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
+    }`}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -127,7 +218,7 @@ const AdminQuestions: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
         >
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -135,13 +226,13 @@ const AdminQuestions: React.FC = () => {
                 <Shield className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{questions.length}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Questions</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{questions.length}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Total Questions</div>
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -149,13 +240,13 @@ const AdminQuestions: React.FC = () => {
                 <Shield className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{questions.filter(q => q.isActive).length}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Active Questions</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{questions.filter(q => q.isActive).length}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Active Questions</div>
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -163,13 +254,13 @@ const AdminQuestions: React.FC = () => {
                 <Shield className="w-6 h-6 text-yellow-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{questions.filter(q => q.difficulty === 'medium').length}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Medium Difficulty</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{questions.filter(q => q.difficulty === 'medium').length}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Medium Difficulty</div>
               </div>
             </div>
           </div>
 
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3">
@@ -177,8 +268,8 @@ const AdminQuestions: React.FC = () => {
                 <Shield className="w-6 h-6 text-red-400" />
               </div>
               <div>
-                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{questions.filter(q => q.difficulty === 'hard').length}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Hard Difficulty</div>
+                <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{questions.filter(q => q.difficulty === 'hard').length}</div>
+                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Hard Difficulty</div>
               </div>
             </div>
           </div>
@@ -189,7 +280,7 @@ const AdminQuestions: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`card battle-card ${
+          className={`p-6 rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           } mb-8`}
         >
@@ -225,7 +316,7 @@ const AdminQuestions: React.FC = () => {
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
               </select>
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <button onClick={openAddEditor} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2">
                 <Plus className="w-5 h-5" />
                 <span>Add Question</span>
               </button>
@@ -238,7 +329,7 @@ const AdminQuestions: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className={`card battle-card ${
+          className={`rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           } overflow-hidden`}
         >
@@ -269,23 +360,23 @@ const AdminQuestions: React.FC = () => {
               <tbody className="divide-y divide-slate-700">
                 {filteredQuestions.map((question) => (
                   <tr key={question.id} className="hover:bg-slate-700/30 transition-colors duration-200">
-                                         <td className="px-6 py-4">
-                       <div>
-                         <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{question.title}</div>
-                         <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} truncate max-w-xs`}>{question.description}</div>
-                       </div>
-                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
-                        {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
-                      </span>
-                    </td>
-                                         <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                       {question.category}
-                     </td>
-                                         <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                       {question.points} pts
-                     </td>
+                                                               <td className="px-6 py-4">
+                        <div>
+                          <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{question.title}</div>
+                          <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'} truncate max-w-xs`}>{question.description}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
+                          {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>
+                        {question.category}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>
+                        {question.points} pts
+                      </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${question.isActive ? 'text-green-400' : 'text-red-400'}`}>
                         {question.isActive ? 'Active' : 'Inactive'}
@@ -302,7 +393,7 @@ const AdminQuestions: React.FC = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-yellow-400 hover:text-yellow-300 transition-colors duration-200">
+                        <button onClick={() => openEditEditor(question)} className="text-yellow-400 hover:text-yellow-300 transition-colors duration-200">
                           <Edit className="w-4 h-4" />
                         </button>
                         <button className="text-red-400 hover:text-red-300 transition-colors duration-200">
@@ -376,6 +467,151 @@ const AdminQuestions: React.FC = () => {
                   <pre className="text-sm text-white bg-slate-800 p-4 rounded-lg overflow-x-auto">
                     {selectedQuestion.solution}
                   </pre>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        {/* Question Editor Modal (Add/Edit) */}
+        {isEditorOpen && form && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`${theme === 'dark' ? 'text-white' : 'text-slate-900'} text-xl font-semibold`}>
+                  {editorMode === 'add' ? 'Add Question' : 'Edit Question'}
+                </h2>
+                <button onClick={() => setIsEditorOpen(false)} className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>✕</button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Basic Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Title</label>
+                    <input
+                      value={form.title}
+                      onChange={(e) => updateFormField('title', e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`}
+                      placeholder="Enter title"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Difficulty</label>
+                    <select
+                      value={form.difficulty}
+                      onChange={(e) => updateFormField('difficulty', e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                      <option value="expert">Expert</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Category</label>
+                  <input
+                    value={form.category}
+                    onChange={(e) => updateFormField('category', e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`}
+                    placeholder="e.g. Arrays, Strings"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Description</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => updateFormField('description', e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg min-h-28 ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`}
+                    placeholder="Problem statement..."
+                  />
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Tags</label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(form.tags || []).map((tag, idx) => (
+                      <span key={idx} className={`px-2 py-1 rounded text-xs ${theme === 'dark' ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-slate-700'}`}>
+                        {tag}
+                        <button className="ml-2" onClick={() => removeFormTag(tag)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <input id="admin-tag-input" className={`flex-1 px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} placeholder="Add tag and press Add" />
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById('admin-tag-input') as HTMLInputElement;
+                        if (el?.value) { addFormTag(el.value); el.value=''; }
+                      }}
+                      className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg"
+                    >Add</button>
+                  </div>
+                </div>
+
+                {/* Points & Limits */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Points</label>
+                    <input type="number" value={form.points} onChange={(e)=>updateFormField('points', Number(e.target.value))} className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                  </div>
+                  <div>
+                    <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Time Limit (sec)</label>
+                    <input type="number" value={form.timeLimit} onChange={(e)=>updateFormField('timeLimit', Number(e.target.value))} className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                  </div>
+                  <div>
+                    <label className={`block text-sm mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Memory Limit (MB)</label>
+                    <input type="number" value={form.memoryLimit} onChange={(e)=>updateFormField('memoryLimit', Number(e.target.value))} className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                  </div>
+                </div>
+
+                {/* Test Cases with Hidden toggle */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className={`${theme === 'dark' ? 'text-white' : 'text-slate-900'} font-semibold`}>Test Cases</h3>
+                    <button onClick={addTestCase} className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm">Add Test Case</button>
+                  </div>
+                  <div className="space-y-3">
+                    {form.testCases.map(tc => (
+                      <div key={tc.id} className={`rounded-lg p-4 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Input</label>
+                            <textarea value={tc.input} onChange={(e)=>updateTestCase(tc.id,'input',e.target.value)} className={`w-full px-3 py-2 rounded ${theme === 'dark' ? 'bg-slate-900 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                          </div>
+                          <div>
+                            <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Expected Output</label>
+                            <textarea value={tc.expectedOutput} onChange={(e)=>updateTestCase(tc.id,'expectedOutput',e.target.value)} className={`w-full px-3 py-2 rounded ${theme === 'dark' ? 'bg-slate-900 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 items-center">
+                          <div>
+                            <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Description (optional)</label>
+                            <input value={tc.description || ''} onChange={(e)=>updateTestCase(tc.id,'description',e.target.value)} className={`w-full px-3 py-2 rounded ${theme === 'dark' ? 'bg-slate-900 border border-slate-700 text-white' : 'bg-white border border-slate-300 text-slate-900'}`} />
+                          </div>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={tc.isHidden} onChange={(e)=>updateTestCase(tc.id,'isHidden',e.target.checked)} />
+                            <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`}>Hidden (only revealed on failure)</span>
+                          </label>
+                          <button onClick={()=>removeTestCase(tc.id)} className="justify-self-end px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm">Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-2">
+                  <button onClick={() => setIsEditorOpen(false)} className={`${theme === 'dark' ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-gray-200 text-slate-700 hover:bg-gray-300'} px-4 py-2 rounded-lg`}>Cancel</button>
+                  <button onClick={saveQuestion} className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg">Save</button>
                 </div>
               </div>
             </motion.div>

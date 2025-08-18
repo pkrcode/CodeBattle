@@ -14,112 +14,97 @@ import {
   Zap
 } from 'lucide-react';
 import { User, FriendRequest } from '../types';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const Friends: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const [friends, setFriends] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [rawFriendRequests, setRawFriendRequests] = useState<FriendRequest[]>([]);
+  const [botUserIds, setBotUserIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendEmail, setNewFriendEmail] = useState('');
 
-  // Mock data for MVP
+  // Real-time data: friends and friend requests (exclude bots)
   useEffect(() => {
-    const mockFriends: User[] = [
-      {
-        uid: '1',
-        email: 'friend1@example.com',
-        displayName: 'CodeMaster_Pro',
-        photoURL: undefined,
-        xp: 15420,
-        goldXp: 1250,
-        level: 15,
-        rank: 'Diamond',
-        friends: [],
-        isOnline: true,
-        lastSeen: new Date(),
-        achievements: [],
-        stats: {
-          totalProblemsSolved: 89,
-          totalMatchesWon: 45,
-          totalMatchesLost: 22,
-          totalMatchesPlayed: 67,
-          winRate: 67,
-          currentStreak: 5,
-          longestStreak: 12,
-          problemsSolvedThisSeason: 23
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        uid: '2',
-        email: 'friend2@example.com',
-        displayName: 'AlgoWarrior',
-        photoURL: undefined,
-        xp: 12850,
-        goldXp: 980,
-        level: 12,
-        rank: 'Platinum',
-        friends: [],
-        isOnline: false,
-        lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        achievements: [],
-        stats: {
-          totalProblemsSolved: 76,
-          totalMatchesWon: 38,
-          totalMatchesLost: 20,
-          totalMatchesPlayed: 58,
-          winRate: 65,
-          currentStreak: 0,
-          longestStreak: 8,
-          problemsSolvedThisSeason: 18
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        uid: '3',
-        email: 'friend3@example.com',
-        displayName: 'DataStruct_King',
-        photoURL: undefined,
-        xp: 11200,
-        goldXp: 850,
-        level: 11,
-        rank: 'Gold',
-        friends: [],
-        isOnline: true,
-        lastSeen: new Date(),
-        achievements: [],
-        stats: {
-          totalProblemsSolved: 67,
-          totalMatchesWon: 32,
-          totalMatchesLost: 17,
-          totalMatchesPlayed: 49,
-          winRate: 65,
-          currentStreak: 3,
-          longestStreak: 7,
-          problemsSolvedThisSeason: 15
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+    if (!user?.uid) return;
 
-    const mockFriendRequests: FriendRequest[] = [
-      {
-        id: '1',
-        fromUserId: '4',
-        toUserId: user?.uid || '',
-        status: 'pending',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 day ago
-      }
-    ];
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+      const list: User[] = [];
+      const bots = new Set<string>();
+      snap.forEach((docu) => {
+        const d: any = docu.data();
+        if (d?.isBot) bots.add(docu.id);
+        if (docu.id === user.uid) return; // skip self
+        if (d?.isBot) return; // exclude bots from friends list
+        list.push({
+          uid: docu.id,
+          email: d.email,
+          displayName: d.displayName,
+          photoURL: d.photoURL,
+          xp: d.xp || 0,
+          goldXp: d.goldXp || 0,
+          level: d.level || 1,
+          rank: d.rank || 'Bronze',
+          friends: d.friends || [],
+          isOnline: !!d.isOnline,
+          lastSeen: d.lastSeen?.toDate?.() || new Date(),
+          achievements: d.achievements || [],
+          stats: d.stats || {
+            totalProblemsSolved: 0,
+            totalMatchesWon: 0,
+            totalMatchesLost: 0,
+            totalMatchesPlayed: 0,
+            winRate: 0,
+            currentStreak: 0,
+            longestStreak: 0,
+            problemsSolvedThisSeason: 0,
+          },
+          createdAt: d.createdAt?.toDate?.() || new Date(),
+          updatedAt: d.updatedAt?.toDate?.() || new Date(),
+        });
+      });
+      setFriends(list);
+      setBotUserIds(bots);
+    });
 
-    setFriends(mockFriends);
-    setFriendRequests(mockFriendRequests);
-  }, [user]);
+    const reqQuery = query(
+      collection(db, 'friendRequests'),
+      where('toUserId', '==', user.uid),
+      where('status', '==', 'pending')
+    );
+    const unsubReqs = onSnapshot(reqQuery, async (snap) => {
+      const reqs: FriendRequest[] = [];
+      snap.forEach((docu) => {
+        const d: any = docu.data();
+        reqs.push({
+          id: docu.id,
+          fromUserId: d.fromUserId,
+          toUserId: d.toUserId,
+          status: d.status,
+          createdAt: d.createdAt?.toDate?.() || new Date(),
+        });
+      });
+      setRawFriendRequests(reqs);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubReqs();
+    };
+  }, [user?.uid]);
+
+  // Filter requests once we know who the non-bot users are
+  useEffect(() => {
+    if (!rawFriendRequests.length) {
+      setFriendRequests([]);
+      return;
+    }
+    setFriendRequests(rawFriendRequests.filter((r) => !botUserIds.has(r.fromUserId)));
+  }, [botUserIds, rawFriendRequests]);
 
   const filteredFriends = friends.filter(friend =>
     friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -248,10 +233,10 @@ const Friends: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="lg:col-span-2"
         >
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
-            <div className="p-6 border-b border-slate-700">
+          <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl border overflow-hidden`}>
+            <div className={`p-6 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white flex items-center">
+                <h2 className={`text-xl font-semibold flex items-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                   <Users className="w-5 h-5 mr-2 text-primary-400" />
                   Friends
                 </h2>
@@ -266,23 +251,25 @@ const Friends: React.FC = () => {
               
               {/* Search */}
               <div className="mt-4 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-400'}`} />
                 <input
                   type="text"
                   placeholder="Search friends..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                    theme === 'dark' ? 'bg-slate-700 border border-slate-600 text-white placeholder-gray-400' : 'bg-gray-100 border border-gray-300 text-slate-900 placeholder-slate-500'
+                  }`}
                 />
               </div>
             </div>
 
-            <div className="divide-y divide-slate-700">
+            <div className={`divide-y ${theme === 'dark' ? 'divide-slate-700' : 'divide-gray-200'}`}>
               {/* Online Friends */}
               {onlineFriends.length > 0 && (
                 <div>
-                  <div className="px-6 py-3 bg-green-500/10">
-                    <h3 className="text-sm font-medium text-green-400">Online ({onlineFriends.length})</h3>
+                  <div className={`px-6 py-3 ${theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50'}`}>
+                    <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>Online ({onlineFriends.length})</h3>
                   </div>
                   {onlineFriends.map((friend) => (
                     <FriendCard key={friend.uid} friend={friend} />
@@ -293,8 +280,8 @@ const Friends: React.FC = () => {
               {/* Offline Friends */}
               {offlineFriends.length > 0 && (
                 <div>
-                  <div className="px-6 py-3 bg-slate-700/30">
-                    <h3 className="text-sm font-medium text-gray-400">Offline ({offlineFriends.length})</h3>
+                  <div className={`px-6 py-3 ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-100'}`}>
+                    <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Offline ({offlineFriends.length})</h3>
                   </div>
                   {offlineFriends.map((friend) => (
                     <FriendCard key={friend.uid} friend={friend} />
@@ -322,21 +309,21 @@ const Friends: React.FC = () => {
         >
           {/* Friend Requests */}
           {friendRequests.length > 0 && (
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
+              <h2 className={`text-lg font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                 <UserPlus className="w-5 h-5 mr-2 text-yellow-400" />
                 Friend Requests
               </h2>
               <div className="space-y-3">
                 {friendRequests.map((request) => (
-                  <div key={request.id} className="bg-slate-700/30 rounded-lg p-4">
+                  <div key={request.id} className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-100'} rounded-lg p-4`}>
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">U</span>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-r from-slate-600 to-slate-700' : 'bg-gray-300'}`}>
+                        <span className={`${theme === 'dark' ? 'text-white' : 'text-slate-800'} font-semibold text-sm`}>U</span>
                       </div>
                       <div>
-                        <div className="font-medium text-white">Unknown User</div>
-                        <div className="text-sm text-gray-400">{getTimeAgo(request.createdAt)}</div>
+                        <div className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Unknown User</div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>{getTimeAgo(request.createdAt)}</div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
@@ -360,8 +347,8 @@ const Friends: React.FC = () => {
           )}
 
           {/* Quick Actions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+          <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
+            <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h2>
             <div className="space-y-3">
               <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3">
                 <Zap className="w-5 h-5" />
@@ -452,29 +439,31 @@ const FriendCard: React.FC<{ friend: User }> = ({ friend }) => {
   };
 
   return (
-    <div className="p-6 hover:bg-slate-700/30 transition-colors duration-200">
+    <div className={`p-6 transition-colors duration-200 ${
+      friend.isOnline ? (document.documentElement.classList.contains('dark') ? 'hover:bg-slate-700/30' : 'hover:bg-gray-50') : (document.documentElement.classList.contains('dark') ? 'hover:bg-slate-700/30' : 'hover:bg-gray-50')
+    }`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-lg">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${document.documentElement.classList.contains('dark') ? 'bg-gradient-to-r from-slate-600 to-slate-700' : 'bg-gray-300'}`}>
+              <span className={`${document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-800'} font-semibold text-lg`}>
                 {friend.displayName.charAt(0)}
               </span>
             </div>
             {friend.isOnline && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
+              <div className={`absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 ${document.documentElement.classList.contains('dark') ? 'border-slate-800' : 'border-white'}`}></div>
             )}
           </div>
           <div>
-            <div className="font-semibold text-white">{friend.displayName}</div>
+            <div className={`font-semibold ${document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-900'}`}>{friend.displayName}</div>
             <div className="flex items-center space-x-2 text-sm">
               <span className={`${getRankColor(friend.rank)}`}>{friend.rank}</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-400">Lv.{friend.level}</span>
+              <span className={`${document.documentElement.classList.contains('dark') ? 'text-gray-400' : 'text-slate-500'}`}>•</span>
+              <span className={`${document.documentElement.classList.contains('dark') ? 'text-gray-400' : 'text-slate-600'}`}>Lv.{friend.level}</span>
               {!friend.isOnline && (
                 <>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-400">{getTimeAgo(friend.lastSeen)}</span>
+                  <span className={`${document.documentElement.classList.contains('dark') ? 'text-gray-400' : 'text-slate-500'}`}>•</span>
+                  <span className={`${document.documentElement.classList.contains('dark') ? 'text-gray-400' : 'text-slate-600'}`}>{getTimeAgo(friend.lastSeen)}</span>
                 </>
               )}
             </div>
@@ -483,14 +472,14 @@ const FriendCard: React.FC<{ friend: User }> = ({ friend }) => {
 
         <div className="flex items-center space-x-3">
           <div className="text-right">
-            <div className="text-sm font-medium text-white">{friend.xp.toLocaleString()}</div>
-            <div className="text-xs text-gray-400">XP</div>
+            <div className={`text-sm font-medium ${document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-900'}`}>{friend.xp.toLocaleString()}</div>
+            <div className={`${document.documentElement.classList.contains('dark') ? 'text-xs text-gray-400' : 'text-xs text-slate-500'}`}>XP</div>
           </div>
           <div className="flex space-x-1">
-            <button className="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors duration-200">
+            <button className={`p-2 rounded-lg transition-colors duration-200 ${document.documentElement.classList.contains('dark') ? 'text-gray-400 hover:text-white hover:bg-slate-600' : 'text-slate-500 hover:text-slate-900 hover:bg-gray-200'}`}>
               <MessageCircle className="w-4 h-4" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors duration-200">
+            <button className={`p-2 rounded-lg transition-colors duration-200 ${document.documentElement.classList.contains('dark') ? 'text-gray-400 hover:text-white hover:bg-slate-600' : 'text-slate-500 hover:text-slate-900 hover:bg-gray-200'}`}>
               <Target className="w-4 h-4" />
             </button>
           </div>

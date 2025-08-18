@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: codebattle-backend
+    env: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5111
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false
+      - key: TIMEOUT
+        sync: false
+      - key: MAX_FILE_SIZE
+        sync: false
+

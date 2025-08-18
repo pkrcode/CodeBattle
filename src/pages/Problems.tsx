@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
@@ -8,11 +8,13 @@ import {
   Search, 
   Filter, 
   Trophy, 
-  Clock,
   Target,
   Zap,
   Flame,
-  Users
+  Users,
+  ChevronDown,
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import { Problem } from '../types';
 import { getAllProblems } from '../data/problemBank';
@@ -26,6 +28,7 @@ const Problems: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Load problems from shared problem bank
   useEffect(() => {
@@ -52,6 +55,15 @@ const Problems: React.FC = () => {
     return matchesSearch && matchesDifficulty && matchesCategory;
   });
 
+  // Group problems by category
+  const groupedProblems = filteredProblems.reduce((acc, problem) => {
+    if (!acc[problem.category]) {
+      acc[problem.category] = [];
+    }
+    acc[problem.category].push(problem);
+    return acc;
+  }, {} as Record<string, Problem[]>);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'text-green-400';
@@ -77,6 +89,16 @@ const Problems: React.FC = () => {
       case 'hard': return <Flame className="w-3 h-3" />;
       default: return <Target className="w-3 h-3" />;
     }
+  };
+
+  const toggleCategory = (category: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(category)) {
+      newExpanded.delete(category);
+    } else {
+      newExpanded.add(category);
+    }
+    setExpandedCategories(newExpanded);
   };
 
   // Calculate stats
@@ -193,8 +215,8 @@ const Problems: React.FC = () => {
 
           <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gold-500/20 rounded-lg">
-                <Trophy className="w-5 h-5 text-gold-400" />
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Trophy className="w-5 h-5 text-purple-400" />
               </div>
               <div>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Solved</p>
@@ -273,77 +295,123 @@ const Problems: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Problems Grid */}
+        {/* Problems by Category */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="space-y-6"
         >
-          {filteredProblems.map((problem, index) => (
+          {Object.entries(groupedProblems).map(([category, categoryProblems], categoryIndex) => (
             <motion.div
-              key={problem.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 * index }}
-              className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-gray-200 hover:border-gray-300'} backdrop-blur-sm rounded-xl border overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer`}
-              onClick={() => {
-                if (user) {
-                  navigate(`/problem/${problem.id}`);
-                } else {
-                  navigate('/login');
-                }
-              }}
+              key={category}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * categoryIndex }}
+              className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl border overflow-hidden`}
             >
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{problem.title}</h3>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyBg(problem.difficulty)} ${getDifficultyColor(problem.difficulty)} flex items-center space-x-1`}>
-                        {getDifficultyIcon(problem.difficulty)}
-                        <span>{problem.difficulty.toUpperCase()}</span>
-                      </span>
-                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{problem.category}</span>
-                    </div>
+              {/* Category Header */}
+              <button
+                onClick={() => toggleCategory(category)}
+                className={`w-full p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
+                    <Code className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex items-center space-x-1 text-gold-400">
-                    <Trophy className="w-4 h-4" />
-                    <span className="text-sm font-semibold">{problem.points}</span>
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold">{category}</h3>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {categoryProblems.length} problems
+                    </p>
                   </div>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-sm px-2 py-1 rounded-full ${
+                    theme === 'dark' ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {categoryProblems.filter(p => p.solvedBy.includes(user?.uid || '')).length} solved
+                  </span>
+                  {expandedCategories.has(category) ? (
+                    <ChevronDown className="w-5 h-5" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5" />
+                  )}
+                </div>
+              </button>
 
-                {/* Description */}
-                <p className={`text-sm mb-4 line-clamp-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{problem.description}</p>
-
-                {/* Stats */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-4">
-                    <div className={`flex items-center space-x-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <Users className="w-4 h-4" />
-                      <span>{problem.solvedBy.length}</span>
-                    </div>
-                    <div className={`flex items-center space-x-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <Clock className="w-4 h-4" />
-                      <span>{problem.testCases.length} tests</span>
-                    </div>
-                  </div>
-                  <button 
-                    className="px-3 py-1 bg-primary-600 text-white text-xs rounded-lg hover:bg-primary-700 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (user) {
-                        navigate(`/problem/${problem.id}`);
-                      } else {
-                        navigate('/login');
-                      }
-                    }}
+              {/* Category Problems */}
+              <AnimatePresence>
+                {expandedCategories.has(category) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="border-t border-gray-200 dark:border-slate-700"
                   >
-                    {user ? 'Solve' : 'Login to Solve'}
-                  </button>
-                </div>
-              </div>
+                    <div className="p-6 space-y-4">
+                      {categoryProblems.map((problem, index) => (
+                        <motion.div
+                          key={problem.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.05 * index }}
+                          className={`${theme === 'dark' ? 'bg-slate-700/50 border-slate-600 hover:border-slate-500' : 'bg-gray-50 border-gray-200 hover:border-gray-300'} rounded-lg border p-4 transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
+                          onClick={() => {
+                            if (user) {
+                              navigate(`/problem/${problem.id}`);
+                            } else {
+                              navigate('/login');
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                  {problem.title}
+                                </h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyBg(problem.difficulty)} ${getDifficultyColor(problem.difficulty)}`}>
+                                  {getDifficultyIcon(problem.difficulty)}
+                                  <span className="ml-1 capitalize">{problem.difficulty}</span>
+                                </span>
+                                {problem.solvedBy.includes(user?.uid || '') && (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200">
+                                    ✓ Solved
+                                  </span>
+                                )}
+                              </div>
+                              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} line-clamp-2`}>
+                                {problem.description}
+                              </p>
+                              <div className="flex items-center space-x-4 mt-3">
+                                <div className="flex items-center space-x-1">
+                                  <Users className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                                  <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {problem.solvedBy.length} solved
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Trophy className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                                  <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {problem.points} points
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <ArrowRight className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </motion.div>

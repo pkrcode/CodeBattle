@@ -70,7 +70,7 @@ const AdminSettings: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen p-6 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen p-6 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'}`}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -101,7 +101,7 @@ const AdminSettings: React.FC = () => {
           className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         >
           {/* System Settings */}
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3 mb-6">
@@ -210,7 +210,7 @@ const AdminSettings: React.FC = () => {
           </div>
 
           {/* Notification Settings */}
-          <div className={`card battle-card ${
+          <div className={`p-6 rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}>
             <div className="flex items-center space-x-3 mb-6">
@@ -314,7 +314,7 @@ const AdminSettings: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`card battle-card ${
+          className={`p-6 rounded-xl border backdrop-blur-sm ${
             theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
           }`}
         >

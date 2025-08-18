@@ -185,7 +185,8 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -196,7 +197,7 @@ const Profile: React.FC = () => {
         <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Your coding journey and achievements</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
         {/* Profile Card */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -596,6 +597,32 @@ const Profile: React.FC = () => {
                 <span className="text-purple-400 font-semibold">{currentUser?.stats?.currentStreak || 0}</span>
               </div>
             </div>
+
+            {/* Battle Statistics (moved to left column) */}
+            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border mt-6`}>
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+                <TrendingUp className="w-5 h-5 mr-2 text-primary-400" />
+                Battle Statistics
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
+                  <div className="text-2xl font-bold text-primary-400">{currentUser?.stats?.totalMatchesPlayed || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Total Battles</div>
+                </div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
+                  <div className="text-2xl font-bold text-green-400">{currentUser?.stats?.totalMatchesWon || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Battles Won</div>
+                </div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
+                  <div className="text-2xl font-bold text-yellow-400">{currentUser?.stats?.totalProblemsSolved || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Problems Solved</div>
+                </div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
+                  <div className="text-2xl font-bold text-purple-400">{currentUser?.stats?.longestStreak || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Longest Streak</div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -606,31 +633,7 @@ const Profile: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="lg:col-span-2 space-y-6"
         >
-          {/* Detailed Stats */}
-          <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
-            <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
-              <TrendingUp className="w-5 h-5 mr-2 text-primary-400" />
-              Battle Statistics
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                <div className="text-2xl font-bold text-primary-400">{currentUser?.stats?.totalMatchesPlayed || 0}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total Battles</div>
-              </div>
-              <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                <div className="text-2xl font-bold text-green-400">{currentUser?.stats?.totalMatchesWon || 0}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Battles Won</div>
-              </div>
-              <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                <div className="text-2xl font-bold text-yellow-400">{currentUser?.stats?.totalProblemsSolved || 0}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Problems Solved</div>
-              </div>
-              <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                <div className="text-2xl font-bold text-purple-400">{currentUser?.stats?.longestStreak || 0}</div>
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Longest Streak</div>
-              </div>
-            </div>
-          </div>
+          {/* Detailed Stats moved to left column */}
 
           {/* Recent Achievements */}
           <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
@@ -720,6 +723,7 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </motion.div>
+      </div>
       </div>
     </div>
   );

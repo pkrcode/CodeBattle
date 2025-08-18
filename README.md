@@ -113,7 +113,7 @@ A competitive programming platform with a comprehensive admin system, where deve
    - **User Portal**: `http://localhost:3000/dashboard`
    - **Admin Portal**: `http://localhost:3000/admin/dashboard`
    - **Login**: `http://localhost:3000/login`
-   - **Code Execution Backend**: `http://localhost:5000`
+   - **Code Execution Backend**: `http://localhost:5111` (configurable via backend `.env` PORT)
 
 ## 🔧 Configuration
 
@@ -263,6 +263,23 @@ REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 REACT_APP_FIREBASE_APP_ID=your_app_id
 ```
+
+### Deploy Backend on Render
+
+1. In Render, create a new Web Service from this repo.
+2. Root directory: `backend/`. Choose “Docker” and point to `backend/Dockerfile` or import `backend/render.yaml` as a Blueprint.
+3. Health Check Path: `/health`.
+4. Set environment variables in Render:
+   - `PORT=5111`
+   - `NODE_ENV=production`
+   - `CORS_ORIGIN=https://code-battle-ten.vercel.app` (your Vercel URL)
+   - Optional: `TIMEOUT`, `MAX_FILE_SIZE`
+5. Deploy and copy the service URL (e.g., `https://codebattle-backend.onrender.com`).
+
+### Point Frontend to Backend (Vercel)
+1. In Vercel Project Settings → Environment Variables, add:
+   - `REACT_APP_BACKEND_URL=https://codebattle-backend.onrender.com`
+2. Redeploy the frontend. The CodingProblem page backend status should show Online.
 
 ## 🤝 Contributing
 

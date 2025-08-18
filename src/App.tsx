@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import AdminNavbar from './components/AdminNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import FirebaseStatus from './components/FirebaseStatus';
+import About from './components/About';
 
 // User Pages
 import Landing from './pages/Landing';
@@ -99,6 +100,7 @@ const UserApp: React.FC = () => {
           } />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
+        <About />
       </main>
     </div>
   );
@@ -160,6 +162,7 @@ const AdminApp: React.FC = () => {
           } />
           <Route path="/admin/*" element={<Navigate to="/admin/dashboard" />} />
         </Routes>
+        <About />
       </main>
     </div>
   );
@@ -217,11 +220,25 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const ScrollToTop: React.FC = () => {
+    const location = useLocation();
+    const navType = useNavigationType(); // 'PUSH' for link clicks, 'POP' for back/forward
+
+    useEffect(() => {
+      if (navType !== 'POP') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+    }, [location.pathname, navType]);
+
+    return null;
+  };
+
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeProvider>
         <AuthProvider>
           <AdminAuthProvider>
+            <ScrollToTop />
             <AppContent />
           </AdminAuthProvider>
         </AuthProvider>

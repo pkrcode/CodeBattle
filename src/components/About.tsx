@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Code, Users, Trophy, Zap, Heart, Github, Mail, Globe } from 'lucide-react';
+import { Code, Users, Trophy, Zap, Heart, Github, Mail, Globe, Linkedin, Youtube, Instagram, ExternalLink } from 'lucide-react';
 
 const About: React.FC = () => {
   const { theme } = useTheme();
@@ -13,8 +13,8 @@ const About: React.FC = () => {
             About CodeBattle
           </h2>
           <p className={`text-lg max-w-3xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-            A competitive programming platform designed to help developers improve their coding skills through 
-            real-time challenges, battles, and collaborative learning.
+            A competitive programming platform designed to help developers improve their coding skills through
+            real-time challenges, battles, and collaborative learning. <span className={`${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>Currently under development.</span>
           </p>
         </div>
 
@@ -76,38 +76,79 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        <div className={`border-t ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} pt-8`}>
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-4 md:mb-0`}>
-              <p>© 2024 CodeBattle. Built with <Heart className="inline w-4 h-4 text-red-500" /> for the coding community.</p>
-            </div>
-            
-            <div className="flex space-x-6">
-              <a 
-                href="https://github.com" 
-                target="_blank" 
+        <div className={`border-t ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} py-10`}>
+          <div className="flex flex-col items-center text-center gap-5">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <a
+                href="https://github.com/pkrcode"
+                target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
               >
                 <Github className="w-5 h-5" />
                 <span>GitHub</span>
               </a>
-              <a 
-                href="mailto:contact@codebattle.com" 
+              <a
+                href="https://github.com/pkrcode/CodeBattle"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span>Repo</span>
+              </a>
+              <a
+                href="https://code-battle-ten.vercel.app/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                <Globe className="w-5 h-5" />
+                <span>Live</span>
+              </a>
+              <a
+                href="mailto:py3term@gmail.com"
                 className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
               >
                 <Mail className="w-5 h-5" />
                 <span>Contact</span>
               </a>
-              <a 
-                href="https://codebattle.com" 
-                target="_blank" 
+              <span className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                <Globe className="w-5 h-5" />
+                <span>Website: To be added</span>
+              </span>
+              <a
+                href="https://www.linkedin.com/in/praveenk-dev/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
               >
-                <Globe className="w-5 h-5" />
-                <span>Website</span>
+                <Linkedin className="w-5 h-5" />
+                <span>LinkedIn</span>
               </a>
+              <a
+                href="https://www.youtube.com/@py3term"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                <Youtube className="w-5 h-5" />
+                <span>YouTube</span>
+              </a>
+              <a
+                href="https://www.instagram.com/py3term"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                <Instagram className="w-5 h-5" />
+                <span>Instagram</span>
+              </a>
+            </div>
+            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p>
+                © {new Date().getFullYear()} CodeBattle. Built with <Heart className="inline w-4 h-4 text-red-500" /> for the coding community.
+              </p>
             </div>
           </div>
         </div>
