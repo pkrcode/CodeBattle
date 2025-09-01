@@ -70,11 +70,11 @@ export interface Problem {
     input: string;
     output: string;
     description: string;
+    isHidden: boolean;
   }[];
   starterCode: {
     cpp: string;
     python: string;
-    javascript: string;
     java: string;
   };
 }
@@ -254,3 +254,66 @@ export interface AdminAction {
   timestamp: Date;
   ipAddress?: string;
 } 
+
+// Aptitude Challenge Types
+export type AptitudeDifficulty = 'easy' | 'medium' | 'hard';
+
+export interface AptitudeQuestion {
+  id: string;
+  difficulty: AptitudeDifficulty;
+  topic: string;
+  question: string;
+  options: string[]; // 4 options
+  correctIndex: number; // 0-3
+  explanation?: string;
+  source?: {
+    name: string; // e.g., "Author curated"
+    url?: string;
+  };
+}
+
+export type ChallengeMode = 'solo' | 'friend' | 'matchmaking';
+export type ChallengeStatus = 'pending' | 'active' | 'completed' | 'cancelled';
+
+export interface ChallengeParticipant {
+  uid: string;
+  displayName: string;
+  score: number;
+  wrong: number;
+  joinedAt: Date;
+  finishedAt?: Date;
+}
+
+export interface AptitudeChallenge {
+  id: string;
+  mode: ChallengeMode;
+  difficulty: AptitudeDifficulty;
+  createdBy: string; // uid
+  status: ChallengeStatus;
+  rules: {
+    maxWrong: number; // e.g., 3
+  };
+  participants: ChallengeParticipant[];
+  questions: string[]; // question ids in order
+  createdAt: Date;
+  startedAt?: Date;
+  endedAt?: Date;
+}
+
+// Aptitude Practice/Progress
+export interface AptitudeSessionRecord {
+  id: string;
+  uid: string;
+  topics: string[];
+  difficulty: AptitudeDifficulty | 'all';
+  questionCount: number;
+  correct: number;
+  wrong: number;
+  startedAt: Date;
+  endedAt: Date;
+  durationSec: number;
+  timed: boolean;
+  timeLimitSec?: number;
+  passed: boolean; // threshold-based (e.g., >=70%)
+  score: number; // correct
+}

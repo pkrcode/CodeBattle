@@ -17,7 +17,8 @@ import {
   Sun,
   Moon,
   Menu,
-  X
+  X,
+  BookOpen
 } from 'lucide-react';
 
 const AdminNavbar: React.FC = () => {
@@ -31,6 +32,7 @@ const AdminNavbar: React.FC = () => {
   const navItems = [
     { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
     { path: '/admin/questions', icon: Shield, label: 'Questions' },
+  { path: '/admin/aptitude', icon: BookOpen, label: 'Aptitude' },
     { path: '/admin/events', icon: Calendar, label: 'Events' },
     { path: '/admin/rewards', icon: Award, label: 'Rewards' },
     { path: '/admin/seasons', icon: Trophy, label: 'Seasons' },

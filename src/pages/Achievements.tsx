@@ -8,6 +8,7 @@ import {
   Lock
 } from 'lucide-react';
 import { Achievement } from '../types';
+import { getDemoAchievements } from '../data/achievementsData';
 
 const Achievements: React.FC = () => {
   // const { user } = useAuth(); // Not used in current implementation
@@ -15,108 +16,9 @@ const Achievements: React.FC = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
 
-  // Mock achievements data for MVP
+  // Load demo achievements once for consistent UX
   useEffect(() => {
-    const mockAchievements: Achievement[] = [
-      {
-        id: '1',
-        name: 'First Victory',
-        description: 'Win your first battle',
-        icon: '🏆',
-        unlockedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        rarity: 'common'
-      },
-      {
-        id: '2',
-        name: 'Problem Solver',
-        description: 'Solve 10 problems',
-        icon: '🎯',
-        unlockedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        rarity: 'common'
-      },
-      {
-        id: '3',
-        name: 'Streak Master',
-        description: 'Maintain a 5-day win streak',
-        icon: '🔥',
-        unlockedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        rarity: 'rare'
-      },
-      {
-        id: '4',
-        name: 'Social Butterfly',
-        description: 'Add 5 friends',
-        icon: '👥',
-        unlockedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        rarity: 'common'
-      },
-      {
-        id: '5',
-        name: 'Gold Collector',
-        description: 'Earn 100 Gold XP',
-        icon: '💰',
-        unlockedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        rarity: 'rare'
-      },
-      {
-        id: '6',
-        name: 'Level Up',
-        description: 'Reach level 10',
-        icon: '⭐',
-        unlockedAt: new Date(),
-        rarity: 'epic'
-      },
-      {
-        id: '7',
-        name: 'Tournament Champion',
-        description: 'Win a tournament',
-        icon: '👑',
-        unlockedAt: null,
-        rarity: 'legendary'
-      },
-      {
-        id: '8',
-        name: 'Speed Demon',
-        description: 'Solve 3 problems in under 30 minutes',
-        icon: '⚡',
-        unlockedAt: null,
-        rarity: 'epic'
-      },
-      {
-        id: '9',
-        name: 'Perfect Match',
-        description: 'Win a battle without losing any problems',
-        icon: '🎯',
-        unlockedAt: null,
-        rarity: 'rare'
-      },
-      {
-        id: '10',
-        name: 'Century Club',
-        description: 'Solve 100 problems',
-        icon: '💯',
-        unlockedAt: null,
-        rarity: 'epic'
-      },
-      {
-        id: '11',
-        name: 'Diamond Rank',
-        description: 'Reach Diamond rank',
-        icon: '💎',
-        unlockedAt: null,
-        rarity: 'legendary'
-      },
-      {
-        id: '12',
-        name: 'Team Player',
-        description: 'Participate in 10 team battles',
-        icon: '🤝',
-        unlockedAt: null,
-        rarity: 'rare'
-      }
-    ];
-
-    setAchievements(mockAchievements);
+    setAchievements(getDemoAchievements());
   }, []);
 
   const unlockedAchievements = achievements.filter(a => a.unlockedAt);

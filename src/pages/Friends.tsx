@@ -9,7 +9,8 @@ import {
   MessageCircle,
   Search,
   Target,
-  Zap
+  Zap,
+  X
 } from 'lucide-react';
 import { User, FriendRequest } from '../types';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -25,6 +26,9 @@ const Friends: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendEmail, setNewFriendEmail] = useState('');
+  const [showTeamBattle, setShowTeamBattle] = useState(false);
+  const [showGroupChat, setShowGroupChat] = useState(false);
+  const [showTournament, setShowTournament] = useState(false);
 
   // Real-time data: friends and friend requests (exclude bots)
   useEffect(() => {
@@ -128,6 +132,18 @@ const Friends: React.FC = () => {
   const handleRejectRequest = (requestId: string) => {
     setFriendRequests(prev => prev.filter(req => req.id !== requestId));
     // In real app, this would reject the friend request
+  };
+
+  const handleStartTeamBattle = () => {
+    setShowTeamBattle(true);
+  };
+
+  const handleGroupChat = () => {
+    setShowGroupChat(true);
+  };
+
+  const handleCreateTournament = () => {
+    setShowTournament(true);
   };
 
   const getTimeAgo = (date: Date) => {
@@ -337,15 +353,24 @@ const Friends: React.FC = () => {
           <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
             <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h2>
             <div className="space-y-3">
-              <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3">
+              <button 
+                onClick={handleStartTeamBattle}
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3"
+              >
                 <Zap className="w-5 h-5" />
                 <span>Start Team Battle</span>
               </button>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3">
+              <button 
+                onClick={handleGroupChat}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3"
+              >
                 <MessageCircle className="w-5 h-5" />
                 <span>Group Chat</span>
               </button>
-              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3">
+              <button 
+                onClick={handleCreateTournament}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-3"
+              >
                 <Target className="w-5 h-5" />
                 <span>Create Tournament</span>
               </button>
@@ -388,6 +413,218 @@ const Friends: React.FC = () => {
                   className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Team Battle Modal */}
+      {showTeamBattle && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-xl p-6 max-w-md w-full`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Start Team Battle</h2>
+              <button
+                onClick={() => setShowTeamBattle(false)}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                Create a team battle with your friends. Select team members and start competing!
+              </p>
+              
+              <div className="space-y-3">
+                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Team Members (2-4 players)
+                </label>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-300'} rounded-lg border p-3 max-h-32 overflow-y-auto`}>
+                  {friends.map((friend) => (
+                    <div key={friend.uid} className="flex items-center space-x-2 py-1">
+                      <input
+                        type="checkbox"
+                        id={friend.uid}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <label htmlFor={friend.uid} className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {friend.displayName}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowTeamBattle(false)}
+                  className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                  Start Battle
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Group Chat Modal */}
+      {showGroupChat && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-xl p-6 max-w-md w-full`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Create Group Chat</h2>
+              <button
+                onClick={() => setShowGroupChat(false)}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Group Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter group name"
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    theme === 'dark' 
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                />
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Select Members
+                </label>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-300'} rounded-lg border p-3 max-h-32 overflow-y-auto`}>
+                  {friends.map((friend) => (
+                    <div key={friend.uid} className="flex items-center space-x-2 py-1">
+                      <input
+                        type="checkbox"
+                        id={`chat-${friend.uid}`}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <label htmlFor={`chat-${friend.uid}`} className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {friend.displayName}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowGroupChat(false)}
+                  className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                  Create Chat
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Tournament Modal */}
+      {showTournament && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-xl p-6 max-w-md w-full`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Create Tournament</h2>
+              <button
+                onClick={() => setShowTournament(false)}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Tournament Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter tournament name"
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    theme === 'dark' 
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                />
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Tournament Type
+                </label>
+                <select className={`w-full px-3 py-2 rounded-lg border ${
+                  theme === 'dark' 
+                    ? 'bg-slate-700 border-slate-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}>
+                  <option value="single-elimination">Single Elimination</option>
+                  <option value="double-elimination">Double Elimination</option>
+                  <option value="round-robin">Round Robin</option>
+                  <option value="swiss">Swiss System</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  Max Participants
+                </label>
+                <input
+                  type="number"
+                  min="4"
+                  max="32"
+                  defaultValue="8"
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    theme === 'dark' 
+                      ? 'bg-slate-700 border-slate-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowTournament(false)}
+                  className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                  Create Tournament
                 </button>
               </div>
             </div>

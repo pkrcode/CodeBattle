@@ -10,7 +10,7 @@ import {
   Eye,
   Search
 } from 'lucide-react';
-import { Question } from '../types';
+import { Question, Problem } from '../types';
 import { getAllProblems } from '../data/problemBank';
 
 const AdminQuestions: React.FC = () => {
@@ -30,14 +30,14 @@ const AdminQuestions: React.FC = () => {
     const loadQuestions = () => {
       const allProblems = getAllProblems();
       // Convert Problem type to Question type for admin interface
-      const convertedQuestions: Question[] = allProblems.map(problem => ({
+      const convertedQuestions: Question[] = allProblems.map((problem: Problem) => ({
         id: problem.id,
         title: problem.title,
         description: problem.description,
         difficulty: problem.difficulty,
         category: problem.category,
         tags: [problem.category.toLowerCase()],
-        testCases: problem.testCases.map((tc, index) => ({
+        testCases: problem.testCases.map((tc: { input: string; output: string; description: string; isHidden: boolean }, index: number) => ({
           id: (index + 1).toString(),
           input: tc.input,
           expectedOutput: tc.output,

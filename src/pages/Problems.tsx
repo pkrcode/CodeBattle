@@ -231,7 +231,7 @@ const Problems: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border mb-8`}
+          className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border mb-8 overflow-hidden`}
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
             {/* Search */}
@@ -252,15 +252,15 @@ const Problems: React.FC = () => {
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center space-x-4">
+      {/* Filters */}
+      <div className="flex items-center flex-wrap gap-3 w-full">
               {/* Difficulty Filter */}
-              <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Filter className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                 <select
                   value={difficultyFilter}
                   onChange={(e) => setDifficultyFilter(e.target.value)}
-                  className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+          className={`w-full sm:w-auto px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     theme === 'dark' 
                       ? 'bg-slate-700/50 border-slate-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
@@ -274,12 +274,12 @@ const Problems: React.FC = () => {
               </div>
 
               {/* Category Filter */}
-              <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Code className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+          className={`w-full sm:w-auto px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     theme === 'dark' 
                       ? 'bg-slate-700/50 border-slate-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
@@ -360,13 +360,7 @@ const Problems: React.FC = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.05 * index }}
                           className={`${theme === 'dark' ? 'bg-slate-700/50 border-slate-600 hover:border-slate-500' : 'bg-gray-50 border-gray-200 hover:border-gray-300'} rounded-lg border p-4 transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
-                          onClick={() => {
-                            if (user) {
-                              navigate(`/problem/${problem.id}`);
-                            } else {
-                              navigate('/login');
-                            }
-                          }}
+                          onClick={() => navigate(`/problem/${problem.id}`)}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">

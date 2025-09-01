@@ -124,11 +124,11 @@ const Landing: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <div className="relative">
-              <img src="/logo.svg" alt="CodeBattle" className="h-10 w-10" />
+            <div className="relative flex-shrink-0">
+              <img src="/logo.svg" alt="CodeBattle" className="h-10 w-10 object-contain" />
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg blur opacity-20 animate-pulse"></div>
             </div>
-            <span className="text-2xl font-bold gradient-text-primary">CodeBattle</span>
+            <span className="text-2xl font-bold gradient-text-primary whitespace-nowrap">CodeBattle</span>
           </motion.div>
           <div className="flex items-center space-x-4">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -303,8 +303,8 @@ const Landing: React.FC = () => {
       <footer className={`px-6 py-12 relative z-10 ${theme === 'dark' ? 'bg-slate-900/50' : 'bg-white/50'} backdrop-blur-md border-t ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <img src="/logo.svg" alt="CodeBattle" className="h-8 w-8" />
-            <span className="text-xl font-bold gradient-text-primary">CodeBattle</span>
+            <img src="/logo.svg" alt="CodeBattle" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-bold gradient-text-primary whitespace-nowrap">CodeBattle</span>
           </div>
           <p className="text-slate-600 dark:text-slate-400">
             © 2024 CodeBattle. All rights reserved. Made with ❤️ for developers.

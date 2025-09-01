@@ -49,14 +49,14 @@ const Battles: React.FC = () => {
             solvedBy: [user?.uid || ''],
             description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
             testCases: [
-              { input: '[2,7,11,15]\n9', output: '[0,1]', description: 'Basic case' },
-              { input: '[3,2,4]\n6', output: '[1,2]', description: 'Target in middle' }
+              { input: '[2,7,11,15]\n9', output: '[0,1]', description: 'Basic case', isHidden: false },
+              { input: '[3,2,4]\n6', output: '[1,2]', description: 'Target in middle', isHidden: false }
             ],
             starterCode: {
               cpp: '#include <vector>\n#include <unordered_map>\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};',
               python: 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        ',
-              javascript: '/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[]}\n */\nvar twoSum = function(nums, target) {\n    \n};',
-              java: 'class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Your code here\n        return new int[]{};\n    }\n}'
+
+              java: 'class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Start coding here\n        return new int[]{};\n    }\n}'
             }
           },
           { 
@@ -68,14 +68,14 @@ const Battles: React.FC = () => {
             solvedBy: [user?.uid || ''],
             description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.',
             testCases: [
-              { input: '()', output: 'true', description: 'Simple parentheses' },
-              { input: '()[]{}', output: 'true', description: 'Mixed brackets' }
+              { input: '()', output: 'true', description: 'Simple parentheses', isHidden: false },
+              { input: '()[]{}', output: 'true', description: 'Mixed brackets', isHidden: false }
             ],
             starterCode: {
               cpp: '#include <string>\n#include <stack>\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        \n    }\n};',
               python: 'class Solution:\n    def isValid(self, s: str) -> bool:\n        ',
-              javascript: '/**\n * @param {string} s\n * @return {boolean}\n */\nvar isValid = function(s) {\n    \n};',
-              java: 'class Solution {\n    public boolean isValid(String s) {\n        // Your code here\n        return false;\n    }\n}'
+
+              java: 'class Solution {\n    public boolean isValid(String s) {\n        // Start coding here\n        return false;\n    }\n}'
             }
           },
           { 
@@ -87,14 +87,14 @@ const Battles: React.FC = () => {
             solvedBy: [],
             description: 'Given the root of a binary tree, return the inorder traversal of its nodes\' values.',
             testCases: [
-              { input: '[1,null,2,3]', output: '[1,3,2]', description: 'Basic tree' },
-              { input: '[]', output: '[]', description: 'Empty tree' }
+              { input: '[1,null,2,3]', output: '[1,3,2]', description: 'Basic tree', isHidden: false },
+              { input: '[]', output: '[]', description: 'Empty tree', isHidden: false }
             ],
             starterCode: {
               cpp: '/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> inorderTraversal(TreeNode* root) {\n        \n    }\n};',
               python: '# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:\n        ',
-              javascript: '/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar inorderTraversal = function(root) {\n    \n};',
-              java: '/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> inorderTraversal(TreeNode root) {\n        // Your code here\n        return new ArrayList<>();\n    }\n}'
+
+              java: '/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> inorderTraversal(TreeNode root) {\n        // Start coding here\n        return new ArrayList<>();\n    }\n}'
             }
           }
         ],
@@ -126,14 +126,14 @@ const Battles: React.FC = () => {
             solvedBy: [user?.uid || ''],
             description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
             testCases: [
-              { input: '["h","e","l","l","o"]', output: '["o","l","l","e","h"]', description: 'Basic string' },
-              { input: '["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]', description: 'Palindrome' }
+              { input: '["h","e","l","l","o"]', output: '["o","l","l","e","h"]', description: 'Basic string', isHidden: false },
+              { input: '["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]', description: 'Palindrome', isHidden: false }
             ],
             starterCode: {
               cpp: 'class Solution {\npublic:\n    void reverseString(vector<char>& s) {\n        \n    }\n};',
               python: 'class Solution:\n    def reverseString(self, s: List[str]) -> None:\n        """\n        Do not return anything, modify s in-place instead.\n        """\n        ',
-              javascript: '/**\n * @param {character[]} s\n * @return {void} Do not return anything, modify s in-place instead.\n */\nvar reverseString = function(s) {\n    \n};',
-              java: 'class Solution {\n    public void reverseString(char[] s) {\n        // Your code here\n    }\n}'
+
+              java: 'class Solution {\n    public void reverseString(char[] s) {\n        // Start coding here\n    }\n}'
             }
           },
           { 
@@ -145,14 +145,14 @@ const Battles: React.FC = () => {
             solvedBy: [user?.uid || ''],
             description: 'Merge two sorted linked lists and return it as a sorted list. The list should be made by splicing together the nodes of the first two lists.',
             testCases: [
-              { input: '[1,2,4]\n[1,3,4]', output: '[1,1,2,3,4,4]', description: 'Basic merge' },
-              { input: '[]\n[]', output: '[]', description: 'Empty lists' }
+              { input: '[1,2,4]\n[1,3,4]', output: '[1,1,2,3,4,4]', description: 'Basic merge', isHidden: false },
+              { input: '[]\n[]', output: '[]', description: 'Empty lists', isHidden: false }
             ],
             starterCode: {
               cpp: '/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n        \n    }\n};',
               python: '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:\n        ',
-              javascript: '/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} list1\n * @param {ListNode} list2\n * @return {ListNode}\n */\nvar mergeTwoLists = function(list1, list2) {\n    \n};',
-              java: '/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n        // Your code here\n        return null;\n    }\n}'
+
+              java: '/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n        // Start coding here\n        return null;\n    }\n}'
             }
           },
           { 
@@ -164,14 +164,14 @@ const Battles: React.FC = () => {
             solvedBy: [user?.uid || ''],
             description: 'You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?',
             testCases: [
-              { input: '2', output: '2', description: 'Two steps' },
-              { input: '3', output: '3', description: 'Three steps' }
+              { input: '2', output: '2', description: 'Two steps', isHidden: false },
+              { input: '3', output: '3', description: 'Three steps', isHidden: false }
             ],
             starterCode: {
               cpp: 'class Solution {\npublic:\n    int climbStairs(int n) {\n        \n    }\n};',
               python: 'class Solution:\n    def climbStairs(self, n: int) -> int:\n        ',
-              javascript: '/**\n * @param {number} n\n * @return {number}\n */\nvar climbStairs = function(n) {\n    \n};',
-              java: 'class Solution {\n    public int climbStairs(int n) {\n        // Your code here\n        return 0;\n    }\n}'
+
+              java: 'class Solution {\n    public int climbStairs(int n) {\n        // Start coding here\n        return 0;\n    }\n}'
             }
           }
         ],
@@ -211,14 +211,14 @@ const Battles: React.FC = () => {
             solvedBy: [],
             description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
             testCases: [
-              { input: '121', output: 'true', description: 'Palindrome number' },
-              { input: '-121', output: 'false', description: 'Negative number' }
+              { input: '121', output: 'true', description: 'Palindrome number', isHidden: false },
+              { input: '-121', output: 'false', description: 'Negative number', isHidden: false }
             ],
             starterCode: {
               cpp: 'class Solution {\npublic:\n    bool isPalindrome(int x) {\n        \n    }\n};',
               python: 'class Solution:\n    def isPalindrome(self, x: int) -> bool:\n        ',
-              javascript: '/**\n * @param {number} x\n * @return {boolean}\n */\nvar isPalindrome = function(x) {\n    \n};',
-              java: 'class Solution {\n    public boolean isPalindrome(int x) {\n        // Your code here\n        return false;\n    }\n}'
+
+              java: 'class Solution {\n    public boolean isPalindrome(int x) {\n        // Start coding here\n        return false;\n    }\n}'
             }
           },
           { 
@@ -230,14 +230,14 @@ const Battles: React.FC = () => {
             solvedBy: [],
             description: 'Given n non-negative integers height where each represents a point at coordinate (i, height[i]), find two lines that together with the x-axis form a container that would hold the maximum amount of water.',
             testCases: [
-              { input: '[1,8,6,2,5,4,8,3,7]', output: '49', description: 'Maximum area' },
-              { input: '[1,1]', output: '1', description: 'Minimum case' }
+              { input: '[1,8,6,2,5,4,8,3,7]', output: '49', description: 'Maximum area', isHidden: false },
+              { input: '[1,1]', output: '1', description: 'Minimum case', isHidden: false }
             ],
             starterCode: {
               cpp: 'class Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        \n    }\n};',
               python: 'class Solution:\n    def maxArea(self, height: List[int]) -> int:\n        ',
-              javascript: '/**\n * @param {number[]} height\n * @return {number}\n */\nvar maxArea = function(height) {\n    \n};',
-              java: 'class Solution {\n    public int maxArea(int[] height) {\n        // Your code here\n        return 0;\n    }\n}'
+
+              java: 'class Solution {\n    public int maxArea(int[] height) {\n        // Start coding here\n        return 0;\n    }\n}'
             }
           },
           { 
@@ -249,14 +249,14 @@ const Battles: React.FC = () => {
             solvedBy: [],
             description: 'Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.',
             testCases: [
-              { input: '[-1,0,1,2,-1,-4]', output: '[[-1,-1,2],[-1,0,1]]', description: 'Basic case' },
-              { input: '[]', output: '[]', description: 'Empty array' }
+              { input: '[-1,0,1,2,-1,-4]', output: '[[-1,-1,2],[-1,0,1]]', description: 'Basic case', isHidden: false },
+              { input: '[]', output: '[]', description: 'Empty array', isHidden: false }
             ],
             starterCode: {
               cpp: 'class Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        \n    }\n};',
               python: 'class Solution:\n    def threeSum(self, nums: List[int]) -> List[List[int]]:\n        ',
-              javascript: '/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar threeSum = function(nums) {\n    \n};',
-              java: 'class Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        // Your code here\n        return new ArrayList<>();\n    }\n}'
+
+              java: 'class Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        // Start coding here\n        return new ArrayList<>();\n    }\n}'
             }
           }
         ],
@@ -291,7 +291,7 @@ const Battles: React.FC = () => {
   };
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+    <div className={`max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -307,7 +307,7 @@ const Battles: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
       >
         <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-4 border`}>
           <div className="flex items-center space-x-3">
@@ -315,8 +315,8 @@ const Battles: React.FC = () => {
               <Trophy className="w-5 h-5 text-primary-400" />
             </div>
             <div>
-              <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.totalMatchesWon || 0}</div>
-              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Battles Won</div>
+              <div className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.totalMatchesWon || 0}</div>
+              <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Battles Won</div>
             </div>
           </div>
         </div>
@@ -327,8 +327,8 @@ const Battles: React.FC = () => {
               <Target className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.totalProblemsSolved || 0}</div>
-              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Problems Solved</div>
+              <div className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.totalProblemsSolved || 0}</div>
+              <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Problems Solved</div>
             </div>
           </div>
         </div>
@@ -339,8 +339,8 @@ const Battles: React.FC = () => {
               <TrendingUp className="w-5 h-5 text-yellow-400" />
             </div>
             <div>
-              <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.winRate || 0}%</div>
-              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Win Rate</div>
+              <div className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.winRate || 0}%</div>
+              <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Win Rate</div>
             </div>
           </div>
         </div>
@@ -351,8 +351,8 @@ const Battles: React.FC = () => {
               <Flame className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.currentStreak || 0}</div>
-              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Win Streak</div>
+              <div className={`text-xl sm:text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.stats?.currentStreak || 0}</div>
+              <div className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Win Streak</div>
             </div>
           </div>
         </div>
@@ -365,7 +365,7 @@ const Battles: React.FC = () => {
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <div className="bg-gradient-to-r from-primary-900/20 to-purple-900/20 backdrop-blur-sm rounded-xl p-6 border border-primary-700/30">
+        <div className={`${theme === 'dark' ? 'bg-gradient-to-r from-primary-900/20 to-purple-900/20 border-primary-700/30' : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'} backdrop-blur-sm rounded-xl p-6 border`}>
           <div className="flex items-center justify-between">
             <div>
               <h2 className={`text-xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Ready for Battle?</h2>
@@ -392,78 +392,124 @@ const Battles: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Active Battles */}
+      {/* Active Battles - Prominent Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mb-8"
+        className="mb-12"
       >
-        <h2 className={`text-xl font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          <Zap className="w-5 h-5 mr-2 text-primary-400" />
-          Active Battles
-        </h2>
-        <div className="space-y-4">
-          {activeBattles.map((battle) => (
-            <div
-              key={battle.id}
-              className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-white border-gray-200 hover:border-gray-300'} backdrop-blur-sm rounded-xl p-6 border transition-all duration-200 cursor-pointer`}
-              onClick={() => setSelectedBattle(battle)}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <Crown className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
-                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>3-day battle</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-sm flex items-center space-x-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <Clock className="w-4 h-4" />
-                    <span>{getTimeLeft(battle.endTime)}</span>
-                  </div>
-                  <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {battle.player1Score} - {battle.player2Score}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {battle.problems.map((problem) => (
-                  <div
-                    key={problem.id}
-                    className={`p-2 rounded-lg text-center ${
-                      problem.solvedBy.includes(user?.uid || '')
-                        ? 'bg-green-500/10 border border-green-500/30'
-                        : 'bg-slate-700/50 border border-slate-600'
-                    }`}
-                  >
-                    <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{problem.title}</div>
-                    <div className={`text-xs px-2 py-1 rounded ${getDifficultyColor(problem.difficulty)}`}>
-                      {problem.difficulty}
+        <div className={`${theme === 'dark' ? 'bg-gradient-to-r from-slate-800/30 to-slate-900/30' : 'bg-gradient-to-r from-gray-50 to-blue-50'} rounded-3xl p-8 border ${theme === 'dark' ? 'border-slate-700/50' : 'border-gray-200'} backdrop-blur-sm`}>
+          <div className="text-center mb-8">
+            <h2 className={`text-3xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} flex items-center justify-center`}>
+              <Zap className="w-8 h-8 mr-3 text-primary-400" />
+              Active Battles
+            </h2>
+            <div className={`w-24 h-1 bg-gradient-to-r from-primary-500 to-purple-600 rounded-full mx-auto mb-6`}></div>
+          </div>
+          
+          {activeBattles.length > 0 ? (
+            <div className="w-full">
+              {activeBattles.map((battle) => (
+                <div
+                  key={battle.id}
+                  className={`${theme === 'dark' ? 'bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-600' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'} backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 border transition-all duration-300 cursor-pointer shadow-xl hover:shadow-2xl hover:scale-[1.01] hover:border-primary-400/30`}
+                  onClick={() => setSelectedBattle(battle)}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-primary-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                        <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className={`text-xl sm:text-2xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{battle.player2Name}</h3>
+                        <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>3-day battle</p>
+                      </div>
+                    </div>
+                    <div className="text-center sm:text-right">
+                      <div className={`text-xs sm:text-sm flex items-center justify-center sm:justify-end space-x-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="font-medium">{getTimeLeft(battle.endTime)}</span>
+                      </div>
+                      <div className={`text-2xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        {battle.player1Score} - {battle.player2Score}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-primary-400">+{battle.xpReward} XP</span>
-                <span className="text-gold-400">+{battle.goldXpReward} Gold</span>
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                    {battle.problems.map((problem) => (
+                      <div
+                        key={problem.id}
+                        className={`p-3 sm:p-4 rounded-lg text-center transition-all duration-200 ${
+                          problem.solvedBy.includes(user?.uid || '')
+                            ? 'bg-green-500/10 border border-green-500/30'
+                            : theme === 'dark'
+                              ? 'bg-slate-700/30 border border-slate-600'
+                              : 'bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        <div className={`text-xs sm:text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} break-words`}>{problem.title}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getDifficultyColor(problem.difficulty)}`}>
+                          {problem.difficulty}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                    <span className="text-primary-400">+{battle.xpReward} XP</span>
+                    <span className="text-yellow-400">+{battle.goldXpReward} Gold</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-          {activeBattles.length === 0 && (
-            <div className="text-center py-8">
-              <div className={`w-16 h-16 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                <Zap className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+          ) : (
+            <div className="text-center py-16">
+              <div className={`w-24 h-24 ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-200'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                <Zap className={`w-12 h-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
               </div>
-              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No active battles</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Start a new battle to compete!</p>
+              <h3 className={`text-xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>No Active Battles</h3>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-4`}>Start a new battle to compete and earn rewards!</p>
+              <button
+                onClick={startNewBattle}
+                disabled={isSearching}
+                className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 mx-auto"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Start New Battle</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
+        </div>
+      </motion.div>
+
+      {/* Battle Rules - Moved outside the container */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="mb-12"
+      >
+        <div className={`${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-blue-50 border-blue-200'} rounded-xl p-4 border max-w-2xl mx-auto`}>
+          <div className="flex items-center space-x-2 mb-2">
+            <Target className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
+            <h3 className={`font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>Battle Rules</h3>
+          </div>
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            Both players solve the same 3 problems. If both solve the same number of problems, 
+            <span className="font-semibold text-primary-400"> extra problems solved will determine the winner</span>. 
+            The player with more solved problems wins!
+          </p>
         </div>
       </motion.div>
 

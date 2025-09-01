@@ -13,6 +13,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { User } from '../types';
+import { sampleAptitudeQuestions } from '../utils/aptitudeData';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -313,10 +314,10 @@ const AdminDashboard: React.FC = () => {
                 <p className={`text-sm font-medium ${
                   theme === 'dark' ? 'text-gray-400' : 'text-slate-600'
                 }`}>
-                  Active Questions
+                  Aptitude Bank
                 </p>
                 <p className="text-2xl font-bold text-purple-600">
-                  25
+                  {sampleAptitudeQuestions.length}
                 </p>
               </div>
               <div className={`p-3 rounded-full ${
@@ -324,6 +325,10 @@ const AdminDashboard: React.FC = () => {
               }`}>
                 <Shield className="h-6 w-6 text-purple-600" />
               </div>
+            </div>
+            <div className="mt-3 flex gap-2 text-xs">
+              <a href="/aptitude/library" className="px-2 py-1 rounded border border-purple-500/30 text-purple-400 hover:bg-purple-500/10">Library</a>
+              <a href="/aptitude/practice" className="px-2 py-1 rounded border border-purple-500/30 text-purple-400 hover:bg-purple-500/10">Practice</a>
             </div>
           </div>
 
@@ -347,6 +352,46 @@ const AdminDashboard: React.FC = () => {
                 <TrendingUp className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Game Modes / New Features */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+        >
+          <div className={`p-6 rounded-xl border backdrop-blur-sm flex items-center justify-between ${
+            theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
+          }`}>
+            <div>
+              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Mode</div>
+              <div className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Aptitude Challenge</div>
+              <div className={`text-xs ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>Enabled • New</div>
+            </div>
+            <a
+              href="/challenge/aptitude"
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm"
+            >
+              Open
+            </a>
+          </div>
+
+          <div className={`p-6 rounded-xl border backdrop-blur-sm flex items-center justify-between ${
+            theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'
+          }`}>
+            <div>
+              <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'}`}>Catalog</div>
+              <div className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Achievements</div>
+              <div className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>Expanded set (mock)</div>
+            </div>
+            <a
+              href="/achievements"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+            >
+              View
+            </a>
           </div>
         </motion.div>
 

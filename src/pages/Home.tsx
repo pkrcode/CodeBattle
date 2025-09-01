@@ -17,6 +17,9 @@ import {
   Timer
 } from 'lucide-react';
 import { DailyTask, Match } from '../types';
+import RankBadge from '../components/RankBadge';
+import RankModal from '../components/RankModal';
+import { getAptitudeQuestionCount } from '../utils/aiClient';
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -92,14 +95,14 @@ const Home: React.FC = () => {
           solvedBy: [user?.uid || ''],
           description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
           testCases: [
-            { input: '[2,7,11,15]\n9', output: '[0,1]', description: 'Basic case' },
-            { input: '[3,2,4]\n6', output: '[1,2]', description: 'Target in middle' }
+            { input: '[2,7,11,15]\n9', output: '[0,1]', description: 'Basic case', isHidden: false },
+            { input: '[3,2,4]\n6', output: '[1,2]', description: 'Target in middle', isHidden: false }
           ],
           starterCode: {
             cpp: '#include <vector>\n#include <unordered_map>\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};',
             python: 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        ',
-            javascript: '/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[]}\n */\nvar twoSum = function(nums, target) {\n    \n};',
-            java: 'class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Your code here\n        return new int[]{};\n    }\n}'
+        
+            java: 'class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Start coding here\n        return new int[]{};\n    }\n}'
           }
         },
         { 
@@ -111,14 +114,14 @@ const Home: React.FC = () => {
           solvedBy: [user?.uid || ''],
           description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.',
           testCases: [
-            { input: '()', output: 'true', description: 'Simple case' },
-            { input: '()[]{}', output: 'true', description: 'Mixed brackets' }
+            { input: '()', output: 'true', description: 'Simple case', isHidden: false },
+            { input: '()[]{}', output: 'true', description: 'Mixed brackets', isHidden: false }
           ],
           starterCode: {
             cpp: '#include <string>\n#include <stack>\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        \n    }\n};',
             python: 'class Solution:\n    def isValid(self, s: str) -> bool:\n        ',
-            javascript: '/**\n * @param {string} s\n * @return {boolean}\n */\nvar isValid = function(s) {\n    \n};',
-            java: 'class Solution {\n    public boolean isValid(String s) {\n        // Your code here\n        return false;\n    }\n}'
+        
+            java: 'class Solution {\n    public boolean isValid(String s) {\n        // Start coding here\n        return false;\n    }\n}'
           }
         },
         { 
@@ -130,14 +133,14 @@ const Home: React.FC = () => {
           solvedBy: [],
           description: 'Given the root of a binary tree, return the inorder traversal of its nodes\' values.',
           testCases: [
-            { input: '[1,null,2,3]', output: '[1,3,2]', description: 'Basic case' },
-            { input: '[]', output: '[]', description: 'Empty tree' }
+            { input: '[1,null,2,3]', output: '[1,3,2]', description: 'Basic case', isHidden: false },
+            { input: '[]', output: '[]', description: 'Empty tree', isHidden: false }
           ],
           starterCode: {
             cpp: '/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> inorderTraversal(TreeNode* root) {\n        \n    }\n};',
             python: '# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:\n        ',
-            javascript: '/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar inorderTraversal = function(root) {\n    \n};',
-            java: '/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> inorderTraversal(TreeNode root) {\n        // Your code here\n        return new ArrayList<>();\n    }\n}'
+        
+            java: '/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> inorderTraversal(TreeNode root) {\n        // Start coding here\n        return new ArrayList<>();\n    }\n}'
           }
         }
       ],
@@ -205,7 +208,8 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen pt-20 px-4 sm:px-6 pb-6">
+  <RankModal currentRank={user?.rank} xp={user?.xp} level={user?.level} />
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-500/10 to-secondary-500/10 rounded-full blur-3xl animate-float"></div>
@@ -224,9 +228,12 @@ const Home: React.FC = () => {
             <Sparkles className="w-4 h-4 text-primary-600 dark:text-primary-400" />
             <span className="text-sm font-medium text-primary-700 dark:text-primary-300">Welcome back!</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 text-slate-900 dark:text-white">
-            Hello, <span className="gradient-text-primary">{user?.displayName || 'Coder'}</span>! 👋
-          </h1>
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white">
+              Hello, <span className="gradient-text-primary">{user?.displayName || 'Coder'}</span>! 👋
+            </h1>
+            <RankBadge rank={user?.rank} />
+          </div>
           <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
             Ready to continue your coding journey? Let's see what challenges await you today.
           </p>
@@ -239,49 +246,109 @@ const Home: React.FC = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
+          {/* Total XP -> Profile */}
           <motion.div variants={itemVariants} className="group">
-            <div className="relative bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-              <div className="absolute top-4 right-4">
-                <Zap className="w-8 h-8 opacity-80" />
+            <Link to="/profile" className="block focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-2xl">
+              <div className="relative bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <div className="absolute top-4 right-4">
+                  <Zap className="w-8 h-8 opacity-80" />
+                </div>
+                <div className="text-3xl font-bold mb-2">{user?.xp ?? 0}</div>
+                <div className="text-primary-100 font-medium">Total XP</div>
+                <div className="mt-4 text-sm text-primary-200">View profile</div>
               </div>
-              <div className="text-3xl font-bold mb-2">1,234</div>
-              <div className="text-primary-100 font-medium">Total XP</div>
-              <div className="mt-4 text-sm text-primary-200">+45 this week</div>
-            </div>
+            </Link>
           </motion.div>
 
+          {/* Battles Won -> Battles */}
           <motion.div variants={itemVariants} className="group">
-            <div className="relative bg-gradient-to-br from-success-500 to-success-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-              <div className="absolute top-4 right-4">
-                <Trophy className="w-8 h-8 opacity-80" />
+            <Link to="/battles" className="block focus:outline-none focus:ring-2 focus:ring-success-500 rounded-2xl">
+              <div className="relative bg-gradient-to-br from-success-500 to-success-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <div className="absolute top-4 right-4">
+                  <Trophy className="w-8 h-8 opacity-80" />
+                </div>
+                <div className="text-3xl font-bold mb-2">{user?.stats?.totalMatchesWon ?? 0}</div>
+                <div className="text-success-100 font-medium">Battles Won</div>
+                <div className="mt-4 text-sm text-success-200">Go to Battles</div>
               </div>
-              <div className="text-3xl font-bold mb-2">42</div>
-              <div className="text-success-100 font-medium">Battles Won</div>
-              <div className="mt-4 text-sm text-success-200">85% win rate</div>
-            </div>
+            </Link>
           </motion.div>
 
+          {/* Problems Solved -> Problems */}
           <motion.div variants={itemVariants} className="group">
-            <div className="relative bg-gradient-to-br from-warning-500 to-warning-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-              <div className="absolute top-4 right-4">
-                <Target className="w-8 h-8 opacity-80" />
+            <Link to="/problems" className="block focus:outline-none focus:ring-2 focus:ring-warning-500 rounded-2xl">
+              <div className="relative bg-gradient-to-br from-warning-500 to-warning-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <div className="absolute top-4 right-4">
+                  <Target className="w-8 h-8 opacity-80" />
+                </div>
+                <div className="text-3xl font-bold mb-2">{user?.stats?.totalProblemsSolved ?? 0}</div>
+                <div className="text-warning-100 font-medium">Problems Solved</div>
+                <div className="mt-4 text-sm text-warning-200">Practice problems</div>
               </div>
-              <div className="text-3xl font-bold mb-2">156</div>
-              <div className="text-warning-100 font-medium">Problems Solved</div>
-              <div className="mt-4 text-sm text-warning-200">12 this month</div>
-            </div>
+            </Link>
           </motion.div>
 
+          {/* Current Rank -> Leaderboard */}
           <motion.div variants={itemVariants} className="group">
-            <div className="relative bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-              <div className="absolute top-4 right-4">
-                <Crown className="w-8 h-8 opacity-80" />
+            <Link to="/leaderboard" className="block focus:outline-none focus:ring-2 focus:ring-secondary-500 rounded-2xl">
+              <div className="relative bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <div className="absolute top-4 right-4">
+                  <Crown className="w-8 h-8 opacity-80" />
+                </div>
+                <div className="text-2xl font-bold mb-2 flex items-center gap-2">
+                  <span>{user?.rank || 'Bronze'}</span>
+                </div>
+                <div className="text-secondary-100 font-medium">Current Rank</div>
+                <div className="mt-4 text-sm text-secondary-200">{(() => {
+                  const m: Record<string, string> = { Bronze: 'Top 80%', Silver: 'Top 50%', Gold: 'Top 15%', Platinum: 'Top 8%', Diamond: 'Top 3%', Master: 'Top 1%', Grandmaster: 'Top 0.1%' };
+                  return m[user?.rank || 'Bronze'];
+                })()}</div>
               </div>
-              <div className="text-3xl font-bold mb-2">Gold</div>
-              <div className="text-secondary-100 font-medium">Current Rank</div>
-              <div className="mt-4 text-sm text-secondary-200">Top 15%</div>
-            </div>
+            </Link>
           </motion.div>
+        </motion.div>
+
+        {/* Featured: Aptitude Challenge */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="relative"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-primary-500/20 rounded-3xl blur-3xl"></div>
+          <div className="relative bg-gradient-to-r from-purple-600 to-primary-600 rounded-3xl p-8 text-white overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Aptitude Challenge</h2>
+                <p className="text-primary-100">Fast MCQ mode • 3 wrong = out • Choose difficulty</p>
+              </div>
+              <div className="hidden md:flex gap-2 items-center">
+                <Link to="/challenge/aptitude?difficulty=easy" className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm">Easy</Link>
+                <Link to="/challenge/aptitude?difficulty=medium" className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm">Medium</Link>
+                <Link to="/challenge/aptitude?difficulty=hard" className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm">Hard</Link>
+                <span className="ml-4 text-primary-100/90 text-sm">Bank: {getAptitudeQuestionCount()} Qs</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center md:justify-start gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/challenge/aptitude')}
+                className="px-8 py-3 bg-white text-primary-600 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 w-full sm:w-auto"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Start Challenge</span>
+              </motion.button>
+              <Link to="/aptitude/practice" className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 w-full sm:w-auto">
+                <span>Practice</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link to="/aptitude/library" className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 w-full sm:w-auto">
+                <span>Library</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
         </motion.div>
 
         {/* Current Match Section */}

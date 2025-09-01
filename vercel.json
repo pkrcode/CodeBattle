@@ -15,6 +15,10 @@
       "dest": "/static/$1"
     },
     {
+      "src": "/logo.svg",
+      "dest": "/logo.svg"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/favicon.ico"
     },
@@ -29,10 +33,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
   }
 }

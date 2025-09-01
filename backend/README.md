@@ -4,7 +4,7 @@ This backend service provides code execution capabilities for multiple programmi
 
 ## Features
 
-- **Multi-language Support**: Python, C++, JavaScript, Java
+- **Multi-language Support**: Python, C++, Java
 - **Test Case Validation**: Automatic validation of code output against expected results
 - **Problem-specific Handlers**: Custom validation logic for different problem types
 - **Security**: Sandboxed execution with timeouts and memory limits
@@ -108,7 +108,7 @@ POST /api/execute
 - Extension: `.cpp`
 - Timeout: 10 seconds
 
-### JavaScript
+
 - Command: `node`
 - Extension: `.js`
 - Timeout: 10 seconds

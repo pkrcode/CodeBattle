@@ -71,7 +71,7 @@ const About: React.FC = () => {
               Multi-Language Support
             </h3>
             <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              Code in Python, C++, JavaScript, Java, and more with full IDE-like experience.
+              Code in Python, C++, Java, and more with full IDE-like experience.
             </p>
           </div>
         </div>

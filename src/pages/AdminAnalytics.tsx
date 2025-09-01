@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { sampleAptitudeQuestions } from '../utils/aptitudeData';
 
 const AdminAnalytics: React.FC = () => {
   const { theme } = useTheme();
@@ -247,6 +248,7 @@ const AdminAnalytics: React.FC = () => {
               <span className="text-green-400">+5.7%</span>
               <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'} ml-1`}>from last month</span>
             </div>
+            <div className={`mt-2 text-xs ${theme==='dark'?'text-gray-400':'text-slate-600'}`}>Aptitude bank: {sampleAptitudeQuestions.length}</div>
           </div>
         </motion.div>
 

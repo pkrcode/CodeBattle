@@ -68,6 +68,40 @@ int main() {
 
   const problemTests = [
     {
+      name: 'Reverse Linked List C++ (Problem 1)',
+      code: `/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* prev = nullptr;
+        ListNode* curr = head;
+        while (curr != nullptr) {
+            ListNode* nextTemp = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = nextTemp;
+        }
+        return prev;
+    }
+};`,
+      language: 'cpp',
+      testCases: [
+        { input: '[1,2,3,4,5]', output: '[5,4,3,2,1]' },
+        { input: '[1,2]', output: '[2,1]' },
+        { input: '[]', output: '[]' }
+      ],
+      problemId: '1'
+    },
+    {
       name: 'Reverse Array (Problem 1)',
       code: `def reverse_array(arr):
     return arr[::-1]

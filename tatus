@@ -3,3 +3,8 @@
 [33m621ea1d[m feat: auto-select Render backend URL when not on localhost (REACT_APP_BACKEND_URL overrideable)
 [33mc8fee05[m[33m ([m[1;31morigin/main[m[33m)[m chore: trigger Vercel redeploy
 [33mc939e04[m UX: output terminal improvements – back-to-terminal button, scroll chaining to page, auto-scroll to bottom
+[33m041912f[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix CI build: remove unused imports and variables; resolve ESLint warnings; fix useEffect deps; backend unaffected
+[33mb1c4bc2[m Fix TypeScript/ESLint errors: remove unused imports and variables
+[33mc873465[m Fix Vercel deployment: remove Windows-specific start script
+[33m9d04d46[m Add backend deployment guides and scripts
+[33mb502863[m Add Vercel deployment configuration

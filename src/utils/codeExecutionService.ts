@@ -9,10 +9,10 @@ function resolveBackendUrl(): string {
   }
 
   // Fallback to Render backend in production
-  return 'https://codebattle-t3ll.onrender.com';
+  return 'https://codebattle-backend-bvzj.onrender.com';
 }
 
-const BACKEND_URL = resolveBackendUrl();
+export const BACKEND_URL = resolveBackendUrl();
 
 export interface TestCase {
   input: string;
@@ -40,7 +40,7 @@ export interface ExecutionResult {
 
 export interface CodeExecutionRequest {
   code: string;
-  language: 'cpp' | 'python' | 'javascript' | 'java';
+  language: 'cpp' | 'python' | 'java';
   testCases: TestCase[];
   problemId: string;
 }

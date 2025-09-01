@@ -21,6 +21,8 @@ import Leaderboard from './pages/Leaderboard';
 import Achievements from './pages/Achievements';
 import Problems from './pages/Problems';
 import CodingProblem from './pages/CodingProblem';
+import AptitudeChallenge from './pages/AptitudeChallenge';
+import Aptitude from './pages/Aptitude';
 
 // Admin Pages
 import AdminSetup from './pages/AdminSetup';
@@ -31,6 +33,7 @@ import AdminRewards from './pages/AdminRewards';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminSettings from './pages/AdminSettings';
 import AdminSeasons from './pages/AdminSeasons';
+import AdminAptitude from './pages/AdminAptitude';
 
 // ProtectedRoute component is now imported from components/ProtectedRoute.tsx
 
@@ -43,11 +46,11 @@ const UserApp: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      theme === 'dark' 
-        ? 'bg-black'
-        : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
-    }`}>
+      <div className={`min-h-screen transition-colors duration-300 ${
+        theme === 'dark' 
+          ? 'bg-black'
+          : 'bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50'
+      }`}>
       <FirebaseStatus />
       {user && <Navbar />}
       <main className={user ? 'pt-16' : ''}>
@@ -71,6 +74,16 @@ const UserApp: React.FC = () => {
               <Battles />
             </ProtectedRoute>
           } />
+          <Route path="/challenge/aptitude" element={
+            <ProtectedRoute>
+              <AptitudeChallenge />
+            </ProtectedRoute>
+          } />
+          <Route path="/aptitude" element={
+            <ProtectedRoute>
+              <Aptitude />
+            </ProtectedRoute>
+          } />
           <Route path="/friends" element={
             <ProtectedRoute>
               <Friends />
@@ -86,18 +99,8 @@ const UserApp: React.FC = () => {
               <Achievements />
             </ProtectedRoute>
           } />
-          <Route path="/problems" element={
-            user ? (
-              <Problems />
-            ) : (
-              <Navigate to="/login" />
-            )
-          } />
-          <Route path="/problem/:problemId" element={
-            <ProtectedRoute>
-              <CodingProblem />
-            </ProtectedRoute>
-          } />
+          <Route path="/problems" element={<Problems />} />
+          <Route path="/problem/:problemId" element={<CodingProblem />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
         <About />
@@ -148,6 +151,11 @@ const AdminApp: React.FC = () => {
           <Route path="/admin/analytics" element={
             <ProtectedRoute requireAdmin>
               <AdminAnalytics />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/aptitude" element={
+            <ProtectedRoute requireAdmin>
+              <AdminAptitude />
             </ProtectedRoute>
           } />
           <Route path="/admin/settings" element={

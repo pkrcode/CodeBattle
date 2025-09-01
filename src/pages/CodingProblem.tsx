@@ -1,26 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Play, Check, AlertTriangle, TerminalSquare, Loader2, ChevronLeft, FileText, Code as CodeIcon, RotateCcw } from 'lucide-react';
+import { Trophy } from 'lucide-react';
+import Editor from '@monaco-editor/react';
+
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { 
-  Play, 
-  CheckCircle, 
-  XCircle, 
-  Code, 
-  Terminal,
-  ArrowLeft,
-  Trophy,
-  RotateCcw,
-  Send,
-  GripVertical
-} from 'lucide-react';
-import { Problem } from '../types';
 import { getProblemById } from '../data/problemBank';
-import Editor from '@monaco-editor/react';
-import { codeExecutionService, TestResult } from '../utils/codeExecutionService';
+import type { Problem } from '../types';
 
-// Add custom styles for Monaco Editor scrolling
+import {
+  loadDraftFromLocal,
+  saveDraftToLocal,
+  loadDraftFromCloud,
+  saveDraftToCloud,
+  migrateGuestDraftsForProblem,
+  type LangKey,
+} from '../utils/codeStorage';
+
+import {
+  codeExecutionService,
+  type CodeExecutionRequest,
+  type TestResult,
+  type CodeExecutionResponse,
+} from '../utils/codeExecutionService';
+
+import {
+  addSubmission,
+  listSubmissions,
+  type SubmissionRecord,
+  type SubmissionStatus,
+} from '../utils/submissions';
+
+import AIHelper from '../components/AIHelper';
+
+// Monaco editor custom styles
 const editorStyles = `
   .monaco-editor {
     overflow: auto !important;
@@ -37,681 +51,867 @@ const editorStyles = `
   .monaco-editor .monaco-scrollable-element .monaco-editor-background .monaco-editor-background {
     overflow: auto !important;
   }
+  /* Fix scrolling when reaching the end of editor */
+  .monaco-editor .monaco-scrollable-element .monaco-editor-background .monaco-editor-background .monaco-editor-background {
+    overflow: auto !important;
+  }
 `;
 
-// interface TestCase {
-//   input: string;
-//   output: string;
-//   description: string;
-// }
+function getDifficultyBg(difficulty: string) {
+  switch (difficulty) {
+    case 'easy': return 'bg-green-500/20 border-green-500/30';
+    case 'medium': return 'bg-yellow-500/20 border-yellow-500/30';
+    case 'hard': return 'bg-red-500/20 border-red-500/30';
+    default: return 'bg-gray-500/20 border-gray-500/30';
+  }
+}
 
-const CodingProblem: React.FC = () => {
-  const { problemId } = useParams<{ problemId: string }>();
+function getDifficultyColor(difficulty: string) {
+  switch (difficulty) {
+    case 'easy': return 'text-green-400';
+    case 'medium': return 'text-yellow-400';
+    case 'hard': return 'text-red-400';
+    default: return 'text-gray-400';
+  }
+}
+
+// Supported languages mapping
+const LANGUAGES: ReadonlyArray<{ key: LangKey; label: string; monaco: 'cpp' | 'python' | 'java' }> = [
+  { key: 'cpp', label: 'C++', monaco: 'cpp' },
+  { key: 'python', label: 'Python', monaco: 'python' },
+  { key: 'java', label: 'Java', monaco: 'java' },
+] as const;
+
+type MobileTab = 'desc' | 'code';
+
+function useBackendHealth() {
+  const [healthy, setHealthy] = useState<boolean | null>(null);
+
+  const ping = useCallback(async () => {
+    try {
+  const ok = await codeExecutionService.checkHealth();
+      setHealthy(ok);
+      return ok;
+    } catch {
+      setHealthy(false);
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    ping();
+    const id = setInterval(ping, 30000);
+    return () => clearInterval(id);
+  }, [ping]);
+
+  return { healthy, ping } as const;
+}
+
+export default function CodingProblem() {
+  const { problemId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUserProfile } = useAuth();
+  const { user } = useAuth();
   const { theme } = useTheme();
-  
+
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<'cpp' | 'python' | 'javascript' | 'java'>('cpp');
-  const [code, setCode] = useState('');
+  const [lang, setLang] = useState<LangKey>('cpp');
+  const [code, setCode] = useState<string>('');
+
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
-  const [output, setOutput] = useState('');
+  const [testResults, setTestResults] = useState<TestResult[] | null>(null);
+  const [execError, setExecError] = useState<string | null>(null);
+  const [terminal, setTerminal] = useState<string[]>([]);
+  const [customTestCases, setCustomTestCases] = useState<Array<{input: string, output: string}>>([]);
+  const [showCustomTest, setShowCustomTest] = useState(false);
+  const [terminalPosition, setTerminalPosition] = useState<'above' | 'below'>('below');
+  const [terminalBorderStyle, setTerminalBorderStyle] = useState<'rounded' | 'sharp' | 'dashed'>('rounded');
+
+  const toggleTerminalPosition = useCallback(() => {
+    setTerminalPosition(prev => prev === 'above' ? 'below' : 'above' as const);
+  }, []);
+
+  const clearTerm = useCallback(() => setTerminal([]), []);
+  const [history, setHistory] = useState<SubmissionRecord[]>([]);
   const [isSolved, setIsSolved] = useState(false);
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [firebaseStatus, setFirebaseStatus] = useState<'online' | 'offline'>('online');
-  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // percentage
-  const [isDragging, setIsDragging] = useState(false);
-  const resizeRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const leftPaneRef = useRef<HTMLDivElement>(null);
-  const rightPaneRef = useRef<HTMLDivElement>(null);
 
-  const scrollToTerminal = () => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  const [mobileTab, setMobileTab] = useState<MobileTab>('desc');
 
-  const handleTerminalWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const el = terminalRef.current;
-    if (!el) return;
-    const atTop = el.scrollTop <= 0;
-    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
-    if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
-      e.preventDefault();
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-    }
-  };
+  const termRef = useRef<HTMLDivElement | null>(null);
 
-  // Load problem on route change and scroll to top
+  const { healthy } = useBackendHealth();
+
+  // Load problem and initial code
   useEffect(() => {
-    const foundProblem = getProblemById(problemId || '');
-    if (foundProblem) {
-      setProblem(foundProblem);
-      setCode(foundProblem.starterCode[selectedLanguage]);
+    if (!problemId) return;
+    const p = getProblemById(problemId);
+    if (!p) {
+      navigate('/problems');
+      return;
     }
+    setProblem(p);
 
-    // Ensure the page starts at the top
-    try {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      leftPaneRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-      rightPaneRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-      terminalRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-    } catch {}
-  }, [problemId, selectedLanguage]);
+  const firstAvailable = LANGUAGES.find((l) => p.starterCode[l.key]);
+  setLang((firstAvailable?.key as LangKey) ?? 'cpp');
+  }, [problemId, navigate]);
 
-  // Update editor contents when language changes without affecting scroll
+  // Load code draft when problem or language changes
   useEffect(() => {
-    if (problem) {
-      setCode(problem.starterCode[selectedLanguage]);
-    }
-  }, [selectedLanguage, problem]);
-
-  useEffect(() => {
-    // Check backend status on component mount
-    const checkBackendStatus = async () => {
-      setBackendStatus('checking');
-      const isHealthy = await codeExecutionService.checkHealth();
-      setBackendStatus(isHealthy ? 'online' : 'offline');
-    };
-    
-    // Check Firebase status
-    const checkFirebaseStatus = () => {
-      setFirebaseStatus(navigator.onLine ? 'online' : 'offline');
-    };
-    
-    checkBackendStatus();
-    checkFirebaseStatus();
-    
-    // Listen for online/offline events
-    window.addEventListener('online', checkFirebaseStatus);
-    window.addEventListener('offline', checkFirebaseStatus);
-    
-    return () => {
-      window.removeEventListener('online', checkFirebaseStatus);
-      window.removeEventListener('offline', checkFirebaseStatus);
-    };
-  }, []);
-
-  // Periodically re-check backend health to keep status fresh
-  useEffect(() => {
-    let isMounted = true;
-    const intervalId = window.setInterval(async () => {
-      try {
-        const isHealthy = await codeExecutionService.checkHealth();
-        if (isMounted) {
-          setBackendStatus(isHealthy ? 'online' : 'offline');
-        }
-      } catch {
-        if (isMounted) {
-          setBackendStatus('offline');
-        }
-      }
-    }, 8000); // every 8 seconds
-
-    // Also refresh when window regains focus
-    const handleFocus = async () => {
-      const isHealthy = await codeExecutionService.checkHealth();
-      if (isMounted) {
-        setBackendStatus(isHealthy ? 'online' : 'offline');
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      isMounted = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  // Handle panel resizing
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      
-      const container = resizeRef.current?.parentElement;
-      if (!container) return;
-      
-      const containerRect = container.getBoundingClientRect();
-      const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-      
-      // Limit the width between 20% and 80%
-      const clampedWidth = Math.max(20, Math.min(80, newWidth));
-      setLeftPanelWidth(clampedWidth);
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isDragging]);
-
-  // Auto-scroll terminal to bottom when output changes
-  useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [output]);
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'hard': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getDifficultyBg = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-500/20 border-green-500/30';
-      case 'medium': return 'bg-yellow-500/20 border-yellow-500/30';
-      case 'hard': return 'bg-red-500/20 border-red-500/30';
-      default: return 'bg-gray-500/20 border-gray-500/30';
-    }
-  };
-
-  const runCode = async () => {
     if (!problem) return;
+    const load = async () => {
+  if (user) await migrateGuestDraftsForProblem(user.uid, problem.id);
+
+  const cloud = user ? await loadDraftFromCloud({ uid: user.uid, problemId: problem.id, language: lang }) : null;
+  const local = loadDraftFromLocal({ problemId: problem.id, language: lang });
+      const starter = problem.starterCode[lang] || '';
+  // Prefer non-empty cloud/local drafts. If a draft is an empty string,
+  // fall back to the starter scaffold so editor is not blank on refresh.
+  const cloudNonEmpty = cloud != null && String(cloud).trim() !== '' ? cloud : null;
+  const localNonEmpty = local != null && String(local).trim() !== '' ? local : null;
+  const initial = cloudNonEmpty ?? localNonEmpty ?? starter;
+      setCode(initial);
+    };
+    load();
+  }, [problem, lang, user]);
+
+  // Handle language change - update code with new starter code if no draft exists
+  const handleLanguageChange = (newLang: LangKey) => {
+    setLang(newLang);
     
+    // If there's no saved draft for the new language, use starter code
+    if (problem) {
+      const local = loadDraftFromLocal({ problemId: problem.id, language: newLang });
+      if (!local) {
+        const starter = problem.starterCode[newLang] || '';
+        setCode(starter);
+      }
+    }
+  };
+
+  // Reset code to default starter code for current language
+  const handleResetCode = () => {
+    if (problem) {
+      const starter = problem.starterCode[lang] || '';
+      setCode(starter);
+    }
+  };
+
+  // Save draft locally on change
+  useEffect(() => {
+    if (!problem) return;
+    const handle = setTimeout(async () => {
+      saveDraftToLocal({ problemId: problem.id, language: lang, code });
+      if (user) {
+        try {
+          await saveDraftToCloud({ uid: user.uid, problemId: problem.id, language: lang, code });
+        } catch (error) {
+          console.warn('Failed to save to cloud:', error);
+        }
+      }
+    }, 1000);
+    return () => clearTimeout(handle);
+  }, [code, problem, lang, user]);
+
+  // Load submission history
+  useEffect(() => {
+    if (!problem || !user) return;
+    const loadHistory = async () => {
+      try {
+        const submissions = await listSubmissions({ uid: user.uid, problemId: problem.id });
+        setHistory(submissions);
+        const solved = submissions.some(s => s.status === 'Accepted');
+        setIsSolved(solved);
+      } catch (error) {
+        console.warn('Failed to load submission history:', error);
+      }
+    };
+    loadHistory();
+  }, [problem, user]);
+
+  // Auto-scroll terminal
+  useEffect(() => {
+    if (termRef.current) {
+      termRef.current.scrollTop = termRef.current.scrollHeight;
+    }
+  }, [terminal]);
+
+  const runCode = useCallback(async () => {
+    console.log('Run code clicked!', { problem: !!problem, code: code?.length, lang });
+    
+    if (!problem) {
+      console.log('No problem loaded');
+      return;
+    }
+    
+    if (!code || !code.trim()) {
+      console.log('No code to run');
+      setExecError('Please write some code first');
+      return;
+    }
+
+    // Prevent running if editor content is unchanged from starter scaffold
+    const starter = problem.starterCode[lang] || '';
+    if (code.trim() === starter.trim()) {
+      console.log('Code unchanged from starter');
+      setExecError('Please implement the solution before running.');
+      return;
+    }
+
     setIsRunning(true);
-    setOutput('Running test cases...\n');
-    
+    setExecError(null);
+    setTestResults(null);
+    setTerminal([]);
+    setTerminalPosition('above'); // Move terminal above when code is run
+
     try {
-      // Check if backend is available
+      // For "Run Code", only use non-hidden test cases
+      const visibleTestCases = (problem.testCases || []).filter(tc => !tc.isHidden);
+      const allTestCases = visibleTestCases;
+
+      const request: CodeExecutionRequest = {
+        code,
+        language: lang as 'cpp' | 'python' | 'java',
+        testCases: allTestCases,
+        problemId: problem.id,
+      };
+
+      console.log('Sending request:', request);
+      
+      // Check if backend is healthy first
       const isHealthy = await codeExecutionService.checkHealth();
       if (!isHealthy) {
-        setOutput('❌ Code execution service is not available. Please make sure the backend is running.\n');
-        setIsRunning(false);
+        setExecError('Backend service is not available. Please try again later.');
         return;
       }
       
-      const response = await codeExecutionService.executeCode({
-        code,
-        language: selectedLanguage,
-        testCases: problem.testCases,
-        problemId: problem.id
-      });
-      
-      if (!response.success) {
-        setOutput(`❌ Code execution failed: ${response.error}\n`);
-        setIsRunning(false);
-        return;
-      }
-      
-      if (!response.results) {
-        setOutput('❌ No results received from code execution service.\n');
-        setIsRunning(false);
-        return;
-      }
-      
-      const { results, allPassed, totalTests, passedTests } = response.results;
-      
-      setTestResults(results);
-      
-      // Update output with results
-      let outputText = '';
-      results.forEach((result, index) => {
-        outputText += `Test case ${index + 1}: ${result.passed ? 'PASSED' : 'FAILED'}\n`;
-        if (!result.passed) {
-          outputText += `  Expected: ${result.expected}\n`;
-          outputText += `  Actual: ${result.actual}\n`;
-          if (result.error) {
-            outputText += `  Error: ${result.error}\n`;
-          }
-        }
-        outputText += `  Time: ${result.executionTime}ms\n\n`;
-      });
-      
-      outputText += `\n${passedTests}/${totalTests} test cases passed.\n`;
-      
-      if (allPassed) {
-        outputText += '🎉 All test cases passed! Problem solved!\n';
-        if (!user) {
-          outputText += '💡 Sign up or log in to earn XP and track your progress!\n';
-        }
+      const response: CodeExecutionResponse = await codeExecutionService.executeCode(request);
+      console.log('Received response:', response);
+
+      if (response.success && response.results) {
+        setTestResults(response.results.results || []);
+        
+        // For run code, we don't save submissions automatically
+        // Only show results for visible test cases
       } else {
-        outputText += '❌ Some test cases failed. Try again!\n';
+        setExecError(response.error || 'Execution failed');
       }
-      
-      setOutput(outputText);
-      
-      // Scroll terminal to bottom after output is updated
-      setTimeout(() => {
-        if (terminalRef.current) {
-          terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-        }
-      }, 100);
-      
     } catch (error) {
-      console.error('Code execution error:', error);
-      setOutput(`❌ Code execution error: ${error instanceof Error ? error.message : 'Unknown error'}\n`);
+      console.error('Run code error:', error);
+      setExecError(error instanceof Error ? error.message : 'Execution failed');
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [problem, code, lang]);
 
-  const submitSolution = async () => {
-    if (!problem) return;
+  const submitCode = useCallback(async () => {
+    console.log('Submit code clicked!', { problem: !!problem, code: code?.length, user: !!user });
     
+    if (!problem) {
+      console.log('No problem loaded');
+      return;
+    }
+    
+    if (!code || !code.trim()) {
+      console.log('No code to submit');
+      setExecError('Please write some code first');
+      return;
+    }
+
+    // Prevent submitting if editor content is unchanged from starter scaffold
+    const starter = problem.starterCode[lang] || '';
+    if (code.trim() === starter.trim()) {
+      console.log('Code unchanged from starter');
+      setExecError('Please implement the solution before submitting.');
+      return;
+    }
+    
+    if (!user) {
+      console.log('No user logged in');
+      setExecError('Please log in to submit solutions');
+      return;
+    }
+
     setIsSubmitting(true);
-    setOutput('Submitting solution...\n');
-    
-    // First run the code to check if it passes all tests
-    await runCode();
-    
-    // Wait a bit for the run to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if all tests passed
-    const allPassed = testResults.every(result => result.passed);
-    
-    if (allPassed) {
-      setIsSolved(true);
+    setExecError(null);
+
+    try {
+      // For "Submit Solution", use ALL test cases including hidden ones
+      const allTestCases = problem.testCases || [];
+
+      const request: CodeExecutionRequest = {
+        code,
+        language: lang as 'cpp' | 'python' | 'java',
+        testCases: allTestCases,
+        problemId: problem.id,
+      };
+
+      console.log('Submitting request:', request);
       
-      // Award XP
-      if (user && !user.achievements.some(a => a.id === `problem_${problem.id}`)) {
-        const xpGained = problem.points;
-        const newXp = user.xp + xpGained;
-        const newLevel = Math.floor(newXp / 1000) + 1;
-        
-        await updateUserProfile({
-          xp: newXp,
-          level: newLevel,
-          stats: {
-            ...user.stats,
-            totalProblemsSolved: user.stats.totalProblemsSolved + 1
-          }
-        });
-        
-        setOutput(prev => prev + `\n💰 +${xpGained} XP earned! (Total: ${newXp} XP)\n`);
-        setOutput(prev => prev + `\n🏆 Problem submitted successfully!\n`);
+      // Check if backend is healthy first
+      const isHealthy = await codeExecutionService.checkHealth();
+      if (!isHealthy) {
+        setExecError('Backend service is not available. Please try again later.');
+        return;
       }
-    } else {
-      setOutput(prev => prev + '\n❌ Cannot submit: Some test cases failed. Fix your code and try again!\n');
-    }
-    
-    setIsSubmitting(false);
-  };
-
-  const resetCode = () => {
-    if (problem) {
-      setCode(problem.starterCode[selectedLanguage]);
-    }
-  };
-
-  if (!problem) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
-        <div className={`text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Problem not found</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
-      {/* Add custom styles for Monaco Editor */}
-      <style>{editorStyles}</style>
       
-      {/* Header */}
-      <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm border-b p-4`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate('/')}
-              className={`flex items-center space-x-2 transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to Home</span>
-            </button>
-            <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-            <div>
-              <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{problem.title}</h1>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyBg(problem.difficulty)} ${getDifficultyColor(problem.difficulty)}`}>
-                  {problem.difficulty.toUpperCase()}
-                </span>
+      const response: CodeExecutionResponse = await codeExecutionService.executeCode(request);
+      console.log('Submit response:', response);
+
+      if (response.success && response.results) {
+        const results = response.results.results || [];
+        setTestResults(results);
+        
+        // Check if all test cases passed
+        const allPassed = response.results.allPassed;
+        const status: SubmissionStatus = allPassed ? 'Accepted' : 'Failed';
+
+        // Save submission
+        await addSubmission({
+          uid: user.uid,
+          problemId: problem.id,
+          language: lang,
+          code,
+          status,
+          passedTests: response.results.passedTests,
+          totalTests: response.results.totalTests,
+          executionTimeMs: results.reduce((sum, t) => sum + t.executionTime, 0),
+        });
+
+        setIsSolved(status === 'Accepted');
+
+        // If some test cases failed, show detailed error with hidden test case info
+        if (!allPassed) {
+          const failedTests = results.filter(r => !r.passed);
+          const hiddenFailedTests = failedTests.filter((_, index) => {
+            const originalTestCases = problem.testCases || [];
+            return originalTestCases[index]?.isHidden;
+          });
+          
+          if (hiddenFailedTests.length > 0) {
+            const errorMessage = `Submission failed! ${response.results.passedTests}/${response.results.totalTests} test cases passed.\n\nFailed hidden test cases:\n${hiddenFailedTests.map((test, idx) => 
+              `Test Case ${test.testCaseIndex + 1}: Expected "${test.expected}", Got "${test.actual}"`
+            ).join('\n')}`;
+            setExecError(errorMessage);
+          } else {
+            setExecError(`Submission failed! ${response.results.passedTests}/${response.results.totalTests} test cases passed.`);
+          }
+        }
+
+        // Update submission history
+        const submissions = await listSubmissions({ uid: user.uid, problemId: problem.id });
+        setHistory(submissions);
+
+      } else {
+        setExecError(response.error || 'Submission failed');
+      }
+
+    } catch (error) {
+      console.error('Submit code error:', error);
+      setExecError(error instanceof Error ? error.message : 'Submission failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [problem, code, lang, user]);
+
+    if (!problem) return null;
+
+    return (
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
+        <style>{editorStyles}</style>
+        <div className="max-w-7xl mx-auto p-4">
+          {/* Header */}
+          <div className={`mb-8 p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <button
+                  onClick={() => navigate('/problems')}
+                  className={`flex items-center space-x-2 transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span>Back to Problems</span>
+                </button>
+              <div className={`hidden sm:block h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h1 className={`text-xl sm:text-2xl font-bold`}>{problem.title}</h1>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyBg(problem.difficulty)} ${getDifficultyColor(problem.difficulty)}`}>
+                    {problem.difficulty.toUpperCase()}
+                  </span>
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{problem.category}</span>
                 <span className="text-gold-400 text-sm flex items-center">
                   <Trophy className="w-4 h-4 mr-1" />
                   {problem.points} XP
                 </span>
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-            
-            <div className="flex items-center space-x-2">
-              {/* Backend Status Indicator */}
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  backendStatus === 'online' ? 'bg-green-400' :
-                  backendStatus === 'offline' ? 'bg-red-400' :
-                  'bg-yellow-400 animate-pulse'
-                }`}></div>
-                <span className={`text-xs ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {backendStatus === 'online' ? 'Backend Online' :
-                   backendStatus === 'offline' ? 'Backend Offline' :
-                   'Checking...'}
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${healthy ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`}></div>
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {healthy ? 'Backend Online' : 'Checking...'}
                 </span>
               </div>
-              
-              <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-
-              {/* Firebase Status Indicator */}
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  firebaseStatus === 'online' ? 'bg-blue-400' : 'bg-orange-400'
-                }`}></div>
-                <span className={`text-xs ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {firebaseStatus === 'online' ? 'Firebase Online' : 'Firebase Offline'}
-                </span>
-              </div>
-              
-              <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-
-              {/* Login Prompt for Non-logged Users */}
-              {!user && (
-                <>
-                  <div className={`text-xs ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                    💡 Sign in to earn XP and track progress
-                  </div>
-                  <div className={`h-6 w-px ${theme === 'dark' ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-                </>
-              )}
-              
-              <button
-                onClick={resetCode}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  theme === 'dark' 
-                    ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset</span>
-              </button>
-              <button
-                onClick={runCode}
-                disabled={isRunning || isSubmitting || backendStatus !== 'online'}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title={backendStatus !== 'online' ? 'Backend is offline. Please start the backend server.' : ''}
-              >
-                {isRunning ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Running...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    <span>Run</span>
-                  </>
-                )}
-              </button>
-              {user && (
-                <button
-                  onClick={submitSolution}
-                  disabled={isRunning || isSubmitting || isSolved || backendStatus !== 'online'}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title={backendStatus !== 'online' ? 'Backend is offline. Please start the backend server.' : ''}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span>Submit</span>
-                    </>
-                  )}
-                </button>
-              )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto p-4 h-screen overflow-hidden">
-        <div className="flex h-full gap-4" ref={resizeRef}>
-          {/* Problem Description */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 overflow-y-auto pr-2 flex flex-col h-full"
-            style={{ width: `${leftPanelWidth}%` }}
-            ref={leftPaneRef}
-          >
-            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
-              <h2 className={`text-lg font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                <Code className="w-5 h-5 mr-2 text-primary-400" />
-                Problem Description
-              </h2>
-              <div className="prose prose-invert max-w-none">
+        {/* Mobile Tab Navigation */}
+        <div className="lg:hidden mb-6">
+          <div className={`flex rounded-lg p-1 ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-200'}`}>
+            <button
+              onClick={() => setMobileTab('desc')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                mobileTab === 'desc'
+                  ? `${theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-white text-gray-900 shadow-sm'}`
+                  : `${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Description</span>
+            </button>
+            <button
+              onClick={() => setMobileTab('code')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                mobileTab === 'code'
+                  ? `${theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-white text-gray-900 shadow-sm'}`
+                  : `${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+              }`}
+            >
+              <CodeIcon className="w-4 h-4" />
+              <span>Code Editor</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Layout */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left Panel: Description & Test Cases */}
+          <div className={`flex-1 space-y-6 ${mobileTab === 'code' ? 'hidden lg:block' : ''}`}>
+              <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}> 
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className={`text-lg font-semibold flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  <Play className="w-5 h-5 mr-2 text-primary-400" />
+                  Problem Description
+                </h2>
+                  <AIHelper
+                    type="dsa"
+                    getParams={() => ({
+                      problemStatement: problem.description,
+                      code: code,
+                      constraints: `Difficulty: ${problem.difficulty}, Category: ${problem.category}`
+                    })}
+                    label="Get Hint"
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors text-sm"
+                  />
+                </div>
                 <pre className={`whitespace-pre-wrap text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                   {problem.description}
                 </pre>
               </div>
-            </div>
 
-            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
-              <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Test Cases</h3>
-              <div className="space-y-4">
-                {problem.testCases.map((testCase, index) => (
-                  <div key={index} className={`border rounded-lg p-4 ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
-                    <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Test Case {index + 1}</div>
-                    <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{testCase.description}</div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className={`mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Input:</div>
-                        <div className={`p-2 rounded font-mono ${theme === 'dark' ? 'bg-slate-700 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
-                          {testCase.input}
+              {/* Test Cases */}
+              {Array.isArray(problem.testCases) && problem.testCases.length > 0 && (
+                <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
+                  <h3 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Test Cases</h3>
+                  <div className="space-y-4">
+                  {problem.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
+                      <div key={i} className={`border rounded-lg p-4 ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
+                        <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Test Case {i + 1}</div>
+                        {tc.description && (
+                          <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{tc.description}</div>
+                        )}
+                        <div className="mb-1 text-xs font-medium">
+                          <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Input:</span>
                         </div>
-                      </div>
-                      <div>
-                        <div className={`mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Expected Output:</div>
-                        <div className={`p-2 rounded font-mono ${theme === 'dark' ? 'bg-slate-700 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
-                          {testCase.output}
+                        <div className={`p-2 rounded font-mono text-xs mb-2 ${theme === 'dark' ? 'bg-slate-700 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
+                          {tc.input}
                         </div>
+                        <div className="mb-1 text-xs font-medium">
+                          <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Expected Output:</span>
+                        </div>
+                      <div className={`p-2 rounded font-mono text-xs ${theme === 'dark' ? 'bg-slate-700 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
+                        {tc.output}
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Resize Handle */}
-          <div
-            className="w-1 bg-gray-300 dark:bg-gray-600 cursor-col-resize hover:bg-blue-500 dark:hover:bg-blue-400 transition-colors flex items-center justify-center"
-            onMouseDown={handleMouseDown}
-          >
-            <GripVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          </div>
-
-          {/* Code Editor and Output */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 overflow-y-auto pr-2 flex-1 flex flex-col h-full"
-            ref={rightPaneRef}
-          >
-
-            {/* Code Editor */}
-            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl border overflow-hidden flex flex-col`}>
-              <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Code className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Code Editor</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {(['cpp', 'python', 'javascript', 'java'] as const).map((lang) => (
-                      <button
-                        key={lang}
-                        onClick={() => setSelectedLanguage(lang)}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          selectedLanguage === lang
-                            ? 'bg-primary-600 text-white'
-                            : theme === 'dark'
-                              ? 'bg-slate-600 text-gray-200 hover:bg-slate-500'
-                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {lang.toUpperCase()}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </div>
-              <div 
-                className="flex-1 min-h-0" 
-                style={{ 
-                  minHeight: '500px',
-                  position: 'relative'
-                }}
-              >
-                <Editor
-                  height="500px"
-                  value={code}
-                  onChange={(v) => setCode(v || '')}
-                  language={selectedLanguage === 'javascript' ? 'javascript' : selectedLanguage}
-                  theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-                    lineNumbers: 'on',
-                    scrollBeyondLastLine: true,
-                    automaticLayout: true,
-                    wordWrap: 'on',
-                    folding: true,
-                    showFoldingControls: 'always',
-                    scrollbar: {
-                      vertical: 'visible',
-                      horizontal: 'visible',
-                      verticalScrollbarSize: 14,
-                      horizontalScrollbarSize: 14
-                    },
-                    mouseWheelScrollSensitivity: 1,
-                    fastScrollSensitivity: 5,
-                    fixedOverflowWidgets: true,
-                    overviewRulerBorder: false,
-                    hideCursorInOverviewRuler: true,
-                    overviewRulerLanes: 0
-                  }}
-                />
-              </div>
+              )}
             </div>
 
-            {/* Output Terminal */}
-            <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl border overflow-hidden flex flex-col`}>
-              <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Terminal className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Output</span>
+            {/* Right Panel: Editor & Output */}
+          <div className={`flex-1 space-y-6 ${mobileTab === 'desc' ? 'hidden lg:block' : ''}`}>
+              {/* Output Terminal - Above Editor when terminalPosition is 'above' */}
+              {terminalPosition === 'above' && (
+                <div className={`${terminalBorderStyle === 'rounded' ? 'rounded-xl' : terminalBorderStyle === 'sharp' ? 'rounded-none' : 'rounded-xl border-dashed'} border overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}> 
+                  <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <TerminalSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Output</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleTerminalPosition}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                          title="Toggle terminal position"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => setTerminalBorderStyle(terminalBorderStyle === 'rounded' ? 'sharp' : terminalBorderStyle === 'sharp' ? 'dashed' : 'rounded')}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                          title="Change border style"
+                        >
+                          {terminalBorderStyle === 'rounded' ? '◯' : terminalBorderStyle === 'sharp' ? '□' : '◊'}
+                        </button>
+                        <button
+                          onClick={clearTerm}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setOutput('')}
-                      className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={scrollToTerminal}
-                      className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                      title="Back to Terminal"
-                    >
-                      Back to Terminal
-                    </button>
-                  </div>
+                  <div 
+                    ref={termRef}
+                  className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'} min-h-48 max-h-64`}
+                  >
+                  <pre className={`text-sm font-mono whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {terminal.length ? terminal.join('\n') : 'Run your code to see the output here...'}
+                  </pre>
                 </div>
               </div>
-              <div 
-                ref={terminalRef}
-                onWheel={handleTerminalWheel}
-                className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'} min-h-64 max-h-96`}
-              >
-                <pre className={`text-sm font-mono whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                  {output || 'Run your code to see the output here...'}
-                </pre>
+              )}
+
+              {/* Code Editor */}
+              <div className={`rounded-xl border overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}> 
+                <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Play className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Code Editor</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {LANGUAGES.map((l) => (
+                        <button
+                          key={l.key}
+                        onClick={() => handleLanguageChange(l.key)}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          lang === l.key 
+                            ? 'bg-primary-600 text-white' 
+                            : theme === 'dark' 
+                              ? 'bg-slate-600 text-gray-200 hover:bg-slate-500' 
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              <div className="flex-1 min-h-0" style={{ minHeight: '500px', position: 'relative' }}>
+                  <Editor
+                    height="500px"
+                    value={code}
+                    onChange={(v) => setCode(v || '')}
+                    language={lang === 'java' ? 'java' : lang}
+                    theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                    onMount={(editor, monaco) => {
+                      // Monaco editor mounted successfully
+                    }}
+                    options={{
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: true,
+                      smoothScrolling: true,
+                      automaticLayout: true,
+                      // … keep your other options
+                    }}
+                  />
+                </div>
               </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={runCode}
+                disabled={isRunning}
+                className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-lg font-medium transition-colors ${
+                  isRunning
+                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {isRunning ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Play className="w-5 h-5" />
+                )}
+                <span>{isRunning ? 'Running...' : 'Run Code'}</span>
+              </button>
+              
+              {user && (
+                <button
+                  onClick={submitCode}
+                  disabled={isSubmitting}
+                  className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-lg font-medium transition-colors ${
+                    isSubmitting
+                      ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Check className="w-5 h-5" />
+                  )}
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit Solution'}</span>
+                </button>
+              )}
+              
+              <button
+                onClick={handleResetCode}
+                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors bg-gray-600 hover:bg-gray-700 text-white"
+              >
+                <RotateCcw className="w-5 h-5" />
+                <span>Reset</span>
+              </button>
             </div>
 
-            {/* Test Results */}
-            {testResults.length > 0 && (
-              <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
-                <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Test Results</h3>
-                <div className="space-y-3">
-                  {testResults.map((result, index) => (
-                    <div
-                      key={index}
+              {/* Output Terminal - Below Editor when terminalPosition is 'below' */}
+              {terminalPosition === 'below' && (
+                <div className={`${terminalBorderStyle === 'rounded' ? 'rounded-xl' : terminalBorderStyle === 'sharp' ? 'rounded-none' : 'rounded-xl border-dashed'} border overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}> 
+                  <div className={`px-4 py-2 border-b ${theme === 'dark' ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'} flex-shrink-0`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <TerminalSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Output</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleTerminalPosition}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                          title="Toggle terminal position"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => setTerminalBorderStyle(terminalBorderStyle === 'rounded' ? 'sharp' : terminalBorderStyle === 'sharp' ? 'dashed' : 'rounded')}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                          title="Change border style"
+                        >
+                          {terminalBorderStyle === 'rounded' ? '◯' : terminalBorderStyle === 'sharp' ? '□' : '◊'}
+                        </button>
+                        <button
+                          onClick={clearTerm}
+                          className={`text-xs px-2 py-1 rounded ${theme === 'dark' ? 'bg-slate-600 text-gray-300 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div 
+                    ref={termRef}
+                  className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'} min-h-48 max-h-64`}
+                  >
+                  <pre className={`text-sm font-mono whitespace-pre-wrap ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {terminal.length ? terminal.join('\n') : 'Run your code to see the output here...'}
+                  </pre>
+                </div>
+              </div>
+              )}
+
+              {/* Test Results */}
+              {testResults && testResults.length > 0 && (
+                <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}> 
+                  <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Test Results</h3>
+                  <div className="space-y-3">
+                    {testResults.map((result, index) => (
+                      <div
+                        key={index}
                       className={`flex items-center justify-between p-3 rounded-lg ${
-                        result.passed ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'
+                        result.passed 
+                          ? 'bg-green-500/20 border border-green-500/30' 
+                          : 'bg-red-500/20 border border-red-500/30'
                       }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {result.passed ? (
-                          <CheckCircle className="w-5 h-5 text-green-400" />
-                        ) : (
-                          <XCircle className="w-5 h-5 text-red-400" />
-                        )}
-                        <div>
+                      >
+                        <div className="flex items-center space-x-3">
+                          {result.passed ? (
+                            <Check className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
                           <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                             Test Case {index + 1}
                           </div>
                           <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                             {result.executionTime}ms
                           </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Expected: {result.expected}
+                        </div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Actual: {result.actual}
+                        </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Expected: {result.expected}</div>
-                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Actual: {result.actual}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Test Cases */}
+              <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Custom Test Cases</h3>
+                  <button
+                    onClick={() => setShowCustomTest(!showCustomTest)}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                      showCustomTest 
+                        ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {showCustomTest ? 'Hide' : 'Add Custom Test'}
+                  </button>
+                </div>
+
+                {showCustomTest && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Input
+                        </label>
+                        <textarea
+                          placeholder="Enter test input..."
+                          className={`w-full px-3 py-2 rounded-lg border ${
+                            theme === 'dark' 
+                              ? 'bg-slate-900 border-slate-700 text-white placeholder-gray-400' 
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                          }`}
+                          rows={3}
+                          value={customTestCases.length > 0 ? customTestCases[customTestCases.length - 1]?.input || '' : ''}
+                          onChange={(e) => {
+                            const newTestCases = [...customTestCases];
+                            if (newTestCases.length === 0) {
+                              newTestCases.push({ input: e.target.value, output: '' });
+                            } else {
+                              newTestCases[newTestCases.length - 1].input = e.target.value;
+                            }
+                            setCustomTestCases(newTestCases);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Expected Output
+                        </label>
+                        <textarea
+                          placeholder="Enter expected output..."
+                          className={`w-full px-3 py-2 rounded-lg border ${
+                            theme === 'dark' 
+                              ? 'bg-slate-900 border-slate-700 text-white placeholder-gray-400' 
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                          }`}
+                          rows={3}
+                          value={customTestCases.length > 0 ? customTestCases[customTestCases.length - 1]?.output || '' : ''}
+                          onChange={(e) => {
+                            const newTestCases = [...customTestCases];
+                            if (newTestCases.length === 0) {
+                              newTestCases.push({ input: '', output: e.target.value });
+                            } else {
+                              newTestCases[newTestCases.length - 1].output = e.target.value;
+                            }
+                            setCustomTestCases(newTestCases);
+                          }}
+                        />
                       </div>
                     </div>
-                  ))}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const newTestCases = [...customTestCases];
+                          if (newTestCases.length > 0 && newTestCases[newTestCases.length - 1].input && newTestCases[newTestCases.length - 1].output) {
+                            newTestCases.push({ input: '', output: '' });
+                            setCustomTestCases(newTestCases);
+                          }
+                        }}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Add Test Case
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newTestCases = customTestCases.filter(tc => tc.input && tc.output);
+                          setCustomTestCases(newTestCases);
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Run Custom Tests
+                      </button>
+                      <button
+                        onClick={() => setCustomTestCases([])}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {customTestCases.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Saved Custom Test Cases ({customTestCases.filter(tc => tc.input && tc.output).length})
+                    </h4>
+                    <div className="space-y-2">
+                      {customTestCases.filter(tc => tc.input && tc.output).map((tc, index) => (
+                        <div key={index} className={`p-3 rounded-lg border ${
+                          theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+                        }`}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className={`font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Input:</span>
+                              <span className={`ml-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>{tc.input}</span>
+                            </div>
+                            <div>
+                              <span className={`font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Expected:</span>
+                              <span className={`ml-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>{tc.output}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            {/* Error Display */}
+            {execError && (
+              <div className={`rounded-xl border p-4 ${theme === 'dark' ? 'bg-red-500/20 border-red-500/30' : 'bg-red-50 border-red-200'}`}>
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  <span className={`text-sm font-medium ${theme === 'dark' ? 'text-red-300' : 'text-red-700'}`}>
+                    Execution Error
+                  </span>
                 </div>
+                <pre className={`mt-2 text-sm font-mono whitespace-pre-wrap ${theme === 'dark' ? 'text-red-200' : 'text-red-600'}`}>
+                  {execError}
+                </pre>
               </div>
             )}
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
-      
-      
-    </div>
   );
-};
-
-export default CodingProblem;
+}

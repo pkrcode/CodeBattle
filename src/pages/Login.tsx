@@ -92,7 +92,7 @@ const Login: React.FC = () => {
                <img 
                  src="/logo.svg" 
                  alt="CodeBattle Logo" 
-                 className="w-12 h-12 rounded-xl"
+                 className="w-12 h-12 rounded-xl object-contain"
                />
                <h1 className="text-3xl font-bold text-white">CodeBattle</h1>
              </div>

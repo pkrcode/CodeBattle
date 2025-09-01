@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { executeCode } = require('./services/codeExecutor');
+const { generateHint, generateAptitudeVariants } = require('./services/aiHelper');
 
 // Load environment variables
 dotenv.config();
@@ -47,6 +48,31 @@ app.post('/api/execute', async (req, res) => {
       success: false,
       error: error.message || 'Internal server error during code execution'
     });
+  }
+});
+
+// AI: DSA/Aptitude hints
+app.post('/api/ai/hint', async (req, res) => {
+  try {
+    const { type = 'dsa', problemStatement, code, constraints } = req.body || {};
+    const data = await generateHint({ type, problemStatement, code, constraints });
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('AI hint endpoint error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate hint' });
+  }
+});
+
+// AI: Aptitude variants
+app.post('/api/ai/aptitude/variants', async (req, res) => {
+  try {
+    const { question, count } = req.body || {};
+    if (!question) return res.status(400).json({ success: false, error: 'question is required' });
+    const data = await generateAptitudeVariants({ question, count });
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('AI variants endpoint error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate variants' });
   }
 });
 

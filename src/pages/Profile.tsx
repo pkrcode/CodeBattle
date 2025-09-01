@@ -13,9 +13,18 @@ import {
   TrendingUp, 
   Award, 
   Flame, 
-  RefreshCw 
+  RefreshCw,
+  BookOpen,
+  Clock,
+  BarChart2,
+  History
 } from 'lucide-react';
 import ProfileIcon, { availableIcons, getRandomIcon } from '../components/ProfileIcons';
+import RankBadge from '../components/RankBadge';
+import { summarizeProgress } from '../utils/aptitudeService';
+import { getDemoAchievements } from '../data/achievementsData';
+import type { AptitudeSessionRecord } from '../types';
+import { Link } from 'react-router-dom';
 
 const Profile: React.FC = () => {
   const { theme } = useTheme();
@@ -32,6 +41,9 @@ const Profile: React.FC = () => {
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'icons' | 'upload'>('icons');
+  // Aptitude progress
+  const [aptitudeSessions, setAptitudeSessions] = useState<AptitudeSessionRecord[]>([]);
+  const [topicStats, setTopicStats] = useState<Array<{ topic: string; attempts: number; correct: number; wrong: number }>>([]);
   
   // Admin-specific editing states
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -48,6 +60,21 @@ const Profile: React.FC = () => {
       setRole(currentUser.role as 'admin' | 'superadmin' || 'admin');
     }
   }, [currentUser]);
+
+  // Load aptitude practice progress (local MVP)
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const { sessions, byTopic } = summarizeProgress(currentUser.uid);
+    setAptitudeSessions((sessions || []).slice(0, 5));
+    const topicArr = Array.from(byTopic.entries()).map(([topic, stats]) => ({ topic, ...stats }));
+    topicArr.sort((a, b) => b.attempts - a.attempts);
+    setTopicStats(topicArr.slice(0, 8));
+  }, [currentUser?.uid]);
+
+  // If the user has no achievements yet, populate a demo set for display parity with Achievements page
+  const recentAchievements = (currentUser?.achievements && currentUser.achievements.length > 0)
+    ? currentUser.achievements
+    : getDemoAchievements();
 
   const handleSave = async () => {
     if (!currentUser) return;
@@ -575,9 +602,7 @@ const Profile: React.FC = () => {
 
             {/* Rank */}
             <div className="text-center mb-6">
-              <div className={`text-lg font-semibold ${getRankColor(currentUser?.rank || 'Bronze')}`}>
-                {currentUser?.rank} Rank
-              </div>
+              <RankBadge rank={currentUser?.rank} />
             </div>
 
             {/* Quick Stats */}
@@ -602,22 +627,22 @@ const Profile: React.FC = () => {
                 <TrendingUp className="w-5 h-5 mr-2 text-primary-400" />
                 Battle Statistics
               </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
-                  <div className="text-2xl font-bold text-primary-400">{currentUser?.stats?.totalMatchesPlayed || 0}</div>
-                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Total Battles</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-3 rounded-lg`}>
+                  <div className="text-xl sm:text-2xl font-bold text-primary-400">{currentUser?.stats?.totalMatchesPlayed || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Total Battles</div>
                 </div>
-                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
-                  <div className="text-2xl font-bold text-green-400">{currentUser?.stats?.totalMatchesWon || 0}</div>
-                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Battles Won</div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-3 rounded-lg`}>
+                  <div className="text-xl sm:text-2xl font-bold text-green-400">{currentUser?.stats?.totalMatchesWon || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Battles Won</div>
                 </div>
-                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
-                  <div className="text-2xl font-bold text-yellow-400">{currentUser?.stats?.totalProblemsSolved || 0}</div>
-                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Problems Solved</div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-3 rounded-lg`}>
+                  <div className="text-xl sm:text-2xl font-bold text-yellow-400">{currentUser?.stats?.totalProblemsSolved || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Problems Solved</div>
                 </div>
-                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-4 rounded-lg`}>
-                  <div className="text-2xl font-bold text-purple-400">{currentUser?.stats?.longestStreak || 0}</div>
-                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Longest Streak</div>
+                <div className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} text-center p-3 rounded-lg`}>
+                  <div className="text-xl sm:text-2xl font-bold text-purple-400">{currentUser?.stats?.longestStreak || 0}</div>
+                  <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>Longest Streak</div>
                 </div>
               </div>
             </div>
@@ -640,7 +665,11 @@ const Profile: React.FC = () => {
               Recent Achievements
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentUser?.achievements.slice(0, 6).map((achievement) => (
+              {(recentAchievements || [])
+                .filter(a => !!a.unlockedAt)
+                .sort((a, b) => (b.unlockedAt?.getTime?.() || 0) - (a.unlockedAt?.getTime?.() || 0))
+                .slice(0, 6)
+                .map((achievement) => (
                 <div
                   key={achievement.id}
                   className={`flex items-center space-x-3 p-4 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}
@@ -652,17 +681,105 @@ const Profile: React.FC = () => {
                     <div className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{achievement.name}</div>
                     <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{achievement.description}</div>
                     <div className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                      {achievement.unlockedAt?.toLocaleDateString() || 'Not unlocked'}
+                      {achievement.unlockedAt ? (achievement.unlockedAt as Date).toLocaleDateString() : 'Not unlocked'}
                     </div>
                   </div>
                 </div>
               ))}
-              {(!currentUser?.achievements || currentUser.achievements.length === 0) && (
+              {(!recentAchievements || (recentAchievements.filter(a => !!a.unlockedAt).length === 0)) && (
                 <div className="col-span-2 text-center py-8">
                   <Award className={`w-12 h-12 mx-auto mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
                   <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No achievements yet</p>
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>Complete battles and solve problems to earn achievements!</p>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Aptitude Progress */}
+          <div className={`${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-xl p-6 border`}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-xl font-semibold flex items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <BarChart2 className="w-5 h-5 mr-2 text-primary-400" />
+                Aptitude Progress
+              </h2>
+              <div className="flex items-center gap-3">
+                <Link to="/aptitude/practice" className="text-sm text-primary-400 hover:text-primary-300">Practice</Link>
+                <Link to="/aptitude/library" className="text-sm text-primary-400 hover:text-primary-300">Library</Link>
+              </div>
+            </div>
+
+            {/* Recent sessions */}
+            <div className="mb-6">
+              <h3 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'} flex items-center`}><History className="w-4 h-4 mr-2"/>Recent Sessions</h3>
+              {aptitudeSessions.length > 0 ? (
+                <div className="space-y-3">
+                  {aptitudeSessions.map((s, idx) => {
+                    const total = s.questionCount;
+                    const acc = total ? Math.round((s.correct / total) * 100) : 0;
+                    const durationSec = s.durationSec ?? Math.max(0, Math.round((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 1000));
+                    return (
+                      <div key={idx} className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} p-3 rounded-lg flex items-center justify-between`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-primary-500/20 flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-primary-400" />
+                          </div>
+                          <div>
+                            <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{s.difficulty.toUpperCase()} • {s.topics.length ? s.topics.join(', ') : 'All Topics'}</div>
+                            <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{new Date(s.startedAt).toLocaleString()}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-green-400">{s.correct}/{total}</div>
+                            <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Acc {acc}% • Wrong {s.wrong}</div>
+                          </div>
+                          <div className="flex items-center text-xs">
+                            <Clock className="w-4 h-4 mr-1 opacity-70" />
+                            <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{durationSec}s</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookOpen className={`w-12 h-12 mx-auto mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>No practice sessions yet</p>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Start with a topic-wise practice or browse the library.</p>
+                  <div className="mt-3 flex items-center justify-center gap-4">
+                    <Link to="/aptitude/practice" className="px-3 py-1.5 rounded bg-primary-600 text-white text-sm hover:bg-primary-700">Start Practice</Link>
+                    <Link to="/aptitude/library" className={`text-sm ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'}`}>View Library</Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Per-topic stats */}
+            <div>
+              <h3 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'} flex items-center`}><Target className="w-4 h-4 mr-2"/>By Topic</h3>
+              {topicStats.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {topicStats.map(t => {
+                    const total = t.correct + t.wrong;
+                    const acc = total ? Math.round((t.correct / total) * 100) : 0;
+                    return (
+                      <div key={t.topic} className={`${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'} p-3 rounded-lg flex items-center justify-between`}>
+                        <div>
+                          <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{t.topic}</div>
+                          <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{t.attempts} attempts</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-green-400">{acc}% acc</div>
+                          <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>C {t.correct} • W {t.wrong}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No topic stats yet</p>
               )}
             </div>
           </div>

@@ -86,7 +86,8 @@ const Navbar: React.FC = () => {
   const navItems = [
     { path: '/battles', icon: '⚔️', label: 'Battles', badge: 'Live' },
     { path: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
-    { path: '/problems', icon: Code, label: 'Problems' },
+    { path: '/problems', icon: Code, label: 'DSA' },
+    { path: '/aptitude', icon: '🧠', label: 'Aptitude' },
   ];
 
   const handleLogout = async () => {
@@ -201,7 +202,7 @@ const Navbar: React.FC = () => {
           : 'bg-white/90 border-slate-200/50'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <motion.div 
@@ -210,15 +211,25 @@ const Navbar: React.FC = () => {
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
             <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <img 
                   src="/logo.svg" 
                   alt="CodeBattle Logo" 
-                  className="h-8 w-8 rounded-lg"
+                  className="h-8 w-8 rounded-lg object-contain"
+                  onError={(e) => {
+                    // Fallback if logo fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
+                {/* Fallback logo if image fails to load */}
+                <div className="hidden h-8 w-8 rounded-lg bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">
+                  CB
+                </div>
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg blur opacity-20 animate-pulse"></div>
               </div>
-              <span className="text-xl font-bold gradient-text-primary">
+              <span className="text-xl font-bold gradient-text-primary whitespace-nowrap">
                 CodeBattle
               </span>
             </Link>
@@ -276,7 +287,7 @@ const Navbar: React.FC = () => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={toggleTheme}
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`hidden md:inline-flex p-2 rounded-xl transition-all duration-200 ${
                 theme === 'dark'
                   ? 'bg-slate-800 hover:bg-slate-700 text-yellow-400'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -290,7 +301,12 @@ const Navbar: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                onClick={() => {
+                  setIsNotificationOpen(!isNotificationOpen);
+                  // Close other UI overlays to prevent stacking/overflow issues on mobile
+                  setIsDropdownOpen(false);
+                  setIsMobileMenuOpen(false);
+                }}
                 className={`relative p-2 rounded-xl transition-all duration-200 ${
                   theme === 'dark'
                     ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
@@ -318,14 +334,17 @@ const Navbar: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-xl border z-50 ${
+                      className={`${
+                        // Use fixed, full-width friendly sheet on small screens; absolute dropdown on md+
+                        ''
+                      } fixed md:absolute top-16 md:top-auto right-2 md:right-0 left-2 md:left-auto md:mt-2 z-50 rounded-2xl shadow-xl border w-[min(92vw,22rem)] md:w-80 ${
                         theme === 'dark'
                           ? 'bg-slate-900 border-slate-700'
                           : 'bg-white border-slate-200'
                       }`}
                       onClick={(e) => e.stopPropagation()}
                     >
-                    <div className="p-4 max-h-96 overflow-y-auto">
+                    <div className="p-4 max-h-[70vh] md:max-h-96 overflow-y-auto">
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Notifications</h3>
                       <div className="space-y-3">
                         {notifications.map((notification) => (
@@ -485,7 +504,15 @@ const Navbar: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => {
+                const next = !isMobileMenuOpen;
+                setIsMobileMenuOpen(next);
+                if (next) {
+                  // Close other overlays when opening mobile menu
+                  setIsDropdownOpen(false);
+                  setIsNotificationOpen(false);
+                }
+              }}
               className={`md:hidden p-2 rounded-xl transition-all duration-200 ${
                 theme === 'dark'
                   ? 'bg-slate-800 hover:bg-slate-700 text-white'
@@ -499,18 +526,18 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile menu */}
-      <AnimatePresence>
+  <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className={`md:hidden border-t ${
+    className={`md:hidden border-t ${
               theme === 'dark' ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'
             }`}
           >
-            <div className="px-4 py-4 space-y-2">
+  <div className="px-4 py-4 space-y-2 max-w-7xl mx-auto">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -541,6 +568,26 @@ const Navbar: React.FC = () => {
                   </Link>
                 );
               })}
+
+              {/* Mobile theme toggle */}
+              <div
+                className={`flex items-center justify-between px-4 py-3 rounded-xl mt-3 border ${
+                  theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'
+                }`}
+              >
+                <span className="text-sm font-medium">Theme</span>
+                <button
+                  onClick={toggleTheme}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 text-yellow-300 hover:bg-slate-600'
+                      : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                  }`}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  <span>{theme === 'dark' ? 'Light' : 'Dark'} mode</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
