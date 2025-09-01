@@ -132,7 +132,9 @@ export default function CodingProblem() {
   }, []);
 
   const clearTerm = useCallback(() => setTerminal([]), []);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [history, setHistory] = useState<SubmissionRecord[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSolved, setIsSolved] = useState(false);
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('desc');

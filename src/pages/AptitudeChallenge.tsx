@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Users, Swords, X, Check, Loader2 } from 'lucide-react';
+import { Swords, Check, Loader2 } from 'lucide-react';
 import { AptitudeChallenge, AptitudeDifficulty, AptitudeQuestion } from '../types';
 import { createLocalChallenge, scoreAnswer } from '../utils/aptitudeService';
 import AIHelper from '../components/AIHelper';

@@ -189,6 +189,7 @@ const Profile: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getRankColor = (rank: string) => {
     switch (rank) {
       case 'Bronze': return 'text-amber-600';
