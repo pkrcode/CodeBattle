@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Mock notifications data
-  const [notifications] = useState([
+  const [notifications, setNotifications] = useState([
     {
       id: '1',
       title: 'New Battle Challenge',
@@ -168,6 +168,13 @@ const Navbar: React.FC = () => {
 
   const handleNotificationClick = (notification: any) => {
     setIsNotificationOpen(false);
+    
+    // Mark notification as read
+    setNotifications(prevNotifications => 
+      prevNotifications.map(n => 
+        n.id === notification.id ? { ...n, isRead: true } : n
+      )
+    );
     
     // Navigate to the corresponding page based on notification type
     switch (notification.action) {
