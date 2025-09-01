@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { aptitudeTopics, sampleAptitudeQuestions } from '../utils/aptitudeData';
 import { AptitudeDifficulty, AptitudeSessionRecord } from '../types';
 import { createPracticeSet, saveAptitudeSession } from '../utils/aptitudeService';
 import AIHelper from '../components/AIHelper';
-import { Link } from 'react-router-dom';
 import { BookOpen, Play } from 'lucide-react';
 
 const Aptitude: React.FC = () => {
@@ -14,7 +13,6 @@ const Aptitude: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'practice' | 'library'>('practice');
   
   // Practice state
-  const [difficulty, setDifficulty] = useState<AptitudeDifficulty | 'all'>('all');
   const [topics, setTopics] = useState<string[]>([]);
   const [practiceMode, setPracticeMode] = useState<'easy' | 'medium' | 'hard' | 'expert'>('medium');
   const [started, setStarted] = useState(false);
@@ -27,12 +25,12 @@ const Aptitude: React.FC = () => {
   const [secondsLeft, setSecondsLeft] = useState(0);
 
   // Practice mode configuration
-  const practiceConfig = {
+  const practiceConfig = useMemo(() => ({
     easy: { questions: 8, timeLimit: 480, description: "Perfect for beginners - 8 questions in 8 minutes" },
     medium: { questions: 12, timeLimit: 720, description: "Balanced challenge - 12 questions in 12 minutes" },
     hard: { questions: 15, timeLimit: 900, description: "Advanced level - 15 questions in 15 minutes" },
     expert: { questions: 20, timeLimit: 1200, description: "Expert challenge - 20 questions in 20 minutes" }
-  };
+  }), []);
 
   // Library state
   const [libraryDifficulty, setLibraryDifficulty] = useState<AptitudeDifficulty | 'all'>('all');
@@ -67,7 +65,7 @@ const Aptitude: React.FC = () => {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [started, finished, practiceMode]);
+  }, [started, finished, practiceMode, practiceConfig]);
 
   const start = () => {
     const config = practiceConfig[practiceMode];
@@ -142,10 +140,7 @@ const Aptitude: React.FC = () => {
     setLibraryTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   };
 
-  const handleQuestionClick = (question: any) => {
-    setSelectedQuestion(question);
-    setShowExplanation(true);
-  };
+
 
   const closeExplanation = () => {
     setShowExplanation(false);
@@ -310,7 +305,7 @@ const Aptitude: React.FC = () => {
               <h3 className={`text-2xl font-bold mb-2 ${textMain}`}>Practice Complete</h3>
               <p className={`${textSub} mb-6`}>Score: {score}/{questions.length} • Wrong: {wrong}</p>
               <div className="flex justify-center gap-3">
-                <button onClick={() => setStarted(false)} className="px-4 py-2 border rounded-lg ${border}">Setup Again</button>
+                <button onClick={() => setStarted(false)} className={`px-4 py-2 border rounded-lg ${border}`}>Setup Again</button>
                 <button onClick={start} className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg">Retry Same</button>
               </div>
             </div>
@@ -460,7 +455,7 @@ const Aptitude: React.FC = () => {
                         <div className={`text-sm font-medium ${textSub} mb-2`}>Explanation:</div>
                         <div className={`bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg ${textSub}`}>
                           {q.explanation || 
-                            `The correct answer is option ${String.fromCharCode(65 + q.correctIndex)}. This question tests your understanding of ${q.topic.toLowerCase()} concepts.`}
+                            'The correct answer is option ' + String.fromCharCode(65 + q.correctIndex) + '. This question tests your understanding of ' + q.topic.toLowerCase() + ' concepts.'}
                         </div>
                       </div>
                     </div>
