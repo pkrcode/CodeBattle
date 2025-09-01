@@ -553,4 +553,4 @@ const Aptitude: React.FC = () => {
   );
 };
 
-export default Aptitude;
+export default Aptitude; 

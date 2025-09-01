@@ -6,24 +6,37 @@ A competitive programming platform with real-time code execution, comprehensive 
 
 ### 🏠 User Features
 - **Dashboard**: Personalized home page with coding questions, battles, and achievements
-- **Coding Problems**: Solve programming challenges with real-time code execution
+- **DSA Problems**: Solve programming challenges with real-time code execution
   - **100 Comprehensive Problems**: C++, Python, and Java starter code with detailed descriptions
   - **Perfect Starter Snippets**: No main functions, minimal includes, ready-to-code templates
   - **Enhanced Problem Descriptions**: Examples, approaches, and complexity analysis for each problem
   - **Comprehensive Test Cases**: Visible and hidden test cases with detailed explanations
+  - **Visual Components**: Sudoku visualizer and planned tree/graph visualizations
 - **Enhanced Terminal**: 
   - Color-coded output (red for errors, green for success, yellow for warnings)
   - Error indicators and detailed execution logs
   - Toggle terminal visibility
   - Auto-scroll and clear functionality
+  - Positioned above code editor with customizable border styles
 - **Battles**: Compete in 1v1 coding matches with cross-sword themed interface
+  - **Active Battle Display**: Prominent battle cards with full-width layout
+  - **Battle Rules**: Clear explanation of scoring and winning conditions
+  - **Problem Navigation**: Click on problems to redirect to coding interface
+  - **Score Scaling**: Question limits scale with user scores
+- **Aptitude System**: Comprehensive aptitude testing platform
+  - **Practice Mode**: Easy, Medium, Hard, Expert modes with predefined question counts and time limits
+  - **Library**: Expandable filters and questions with detailed explanations
+  - **Topic Coverage**: Numbers, Percentages, Ratio & Proportion, Averages, Profit & Loss, and 30+ more topics
+  - **Interactive UI**: Expandable question cards with correct answer highlighting
 - **Leaderboard**: Global rankings with seasonal rewards and achievements
-- **Friends**: Add friends and see who's online
+- **Friends**: Add friends, see who's online, and use quick actions
+  - **Quick Actions**: Start Team Battle, Group Chat, Create Tournament (with modals)
 - **Profile Management**: 
   - Customize display name and profile icons
   - Upload custom profile images
   - View detailed statistics and achievements
   - Track XP progress and battle history
+  - Responsive stats display
 
 ### 👑 Admin System
 - **Unified Login**: Single login system for both users and admins
@@ -66,11 +79,12 @@ A competitive programming platform with real-time code execution, comprehensive 
 ### Frontend
 - **React 18** - Modern React with hooks and functional components
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS** - Utility-first CSS framework with responsive design
 - **Framer Motion** - Smooth animations and transitions
 - **Monaco Editor** - Professional code editor (VS Code-like)
 - **Lucide React** - Beautiful icon library
 - **React Router DOM v6** - Client-side routing
+- **Responsive Design** - Mobile-first approach with adaptive layouts
 
 ### Backend & Services
 - **Firebase** - Authentication and Firestore database
@@ -149,9 +163,10 @@ A competitive programming platform with real-time code execution, comprehensive 
 ## 🌐 Live Deployment
 
 ### Frontend (Vercel)
-- **URL**: `https://code-battle-pup5kg6m3-praveen-kumars-projects-81ba3472.vercel.app`
+- **URL**: `https://code-battle-ou4pxi72m-praveen-kumars-projects-81ba3472.vercel.app`
 - **Status**: ✅ Live and fully functional
-- **Features**: All user features, enhanced terminal, responsive design
+- **Features**: All user features, enhanced terminal, responsive design, aptitude system
+- **Auto-Deployment**: Connected to GitHub repository for automatic updates
 
 ### Backend (Render)
 - **URL**: `https://codebattle-backend-bvzj.onrender.com`
