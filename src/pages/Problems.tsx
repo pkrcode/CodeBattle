@@ -318,6 +318,14 @@ const Problems: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center space-x-3">
+                  {/* Expansion Arrow - moved to left like folder icons */}
+                  <div className="flex items-center justify-center w-6 h-6">
+                    {expandedCategories.has(category) ? (
+                      <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    )}
+                  </div>
                   <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
                     <Code className="w-5 h-5 text-white" />
                   </div>
@@ -334,11 +342,6 @@ const Problems: React.FC = () => {
                   }`}>
                     {categoryProblems.filter(p => p.solvedBy.includes(user?.uid || '')).length} solved
                   </span>
-                  {expandedCategories.has(category) ? (
-                    <ChevronDown className="w-5 h-5" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5" />
-                  )}
                 </div>
               </button>
 
